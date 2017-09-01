@@ -1,25 +1,39 @@
 class TrackedFile < ActiveRecord::Base
 
-  has_many :fixity_checks, dependent: :destroy
+  include TrackedFileAdmin
 
   scope :under, ->(path) { where("path LIKE ?", "#{path}/%") }
-  scope :not_fixity_checked, -> { includes(:fixity_checks).where(fixity_checks: { id: nil }) }
-  scope :fixity_checked,     -> { includes(:fixity_checks).where.not(fixity_checks: { id: nil }) }
+
+  before_create :set_fixity
 
   def self.fixity_check_due
-    left_outer_joins(:fixity_checks).group('tracked_files.id').having("max(fixity_checks.checked_at) < ?", FixityCheck.due_date)
+    where("fixity_checked_at < ?", FixityCheck.due_date)
   end
 
   def fixity_check!
-    FixityCheck.check!(self)
+    self.fixity_checked_at = DateTime.now
+    self.fixity_status = fixity_check
+    save!
+  end
+  alias_method :check_fixity!, :fixity_check!
+
+  def fixity_check
+    Fixity.check(fixity)
+  end
+  alias_method :check_fixity, :fixity_check
+
+  def fixity
+    @fixity ||= Fixity.new(path, md5, sha1, size)
   end
 
-  def last_fixity_check
-    fixity_checks.order(checked_at: :desc).first
+  def fixity_display_status
+    Fixity::DISPLAY_STATUS[fixity_status]
   end
 
-  def digests
-    @digests ||= Digests.new(path, md5, sha1)
+  def set_fixity
+    self.md5  = fixity.md5  unless md5
+    self.sha1 = fixity.sha1 unless sha1
+    self.size = fixity.size unless size
   end
 
 end
