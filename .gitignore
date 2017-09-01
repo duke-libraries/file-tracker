@@ -19,3 +19,6 @@
 /yarn-error.log
 
 .byebug_history
+
+# RSpec
+/spec/examples.txt
