@@ -5,13 +5,13 @@ git_source(:github) do |repo_name|
   "https://github.com/#{repo_name}.git"
 end
 
-gem 'rails', '~> 5.1.3'
-# gem 'mysql2', group: :production
 gem 'sqlite3'
+gem 'rails', '~> 5.1.3'
 gem 'puma', '~> 3.7'
 gem 'jbuilder', '~> 2.5'
 gem 'redis', '~> 3.0'
 gem 'resque', '~> 1.27'
+gem 'resque-web', require: 'resque_web'
 gem 'rails_admin', '~> 1.2'
 gem 'activerecord-import', '~> 0.19'
 
@@ -20,19 +20,14 @@ group :development, :test do
   gem 'byebug'
   gem 'rspec-rails'
   gem 'rspec-its'
-  # Adds support for Capybara system testing and selenium driver
-  # gem 'capybara', '~> 2.13'
-  # gem 'selenium-webdriver'
 end
 
-# ExecJS
-gem 'therubyracer', require: 'v8', group: :production
+group :production do
+  # gem 'mysql2'
+  # ExecJS runtime
+  gem 'therubyracer', require: 'v8'
+end
 
 group :development do
-  # Access an IRB console on exception pages or by using <%= console %> anywhere in the code.
-  # gem 'web-console', '>= 3.3.0'
   gem 'listen', '>= 3.0.5', '< 3.2'
 end
-
-# Windows does not include zoneinfo files, so bundle the tzinfo-data gem
-# gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]

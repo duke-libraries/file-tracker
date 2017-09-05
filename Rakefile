@@ -5,4 +5,6 @@ require_relative 'config/application'
 
 Rails.application.load_tasks
 
+require 'resque/tasks'
+
 task default: :spec

@@ -1,4 +1,11 @@
+require "resque_web"
+
 Rails.application.routes.draw do
+
+  # Rails admin
   mount RailsAdmin::Engine => '/admin', as: 'rails_admin'
-  # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
+
+  # Resque web
+  mount ResqueWeb::Engine => "/queues"
+
 end
