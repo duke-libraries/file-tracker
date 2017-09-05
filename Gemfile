@@ -6,8 +6,8 @@ git_source(:github) do |repo_name|
 end
 
 gem 'rails', '~> 5.1.3'
-gem 'mysql2', group: :production
-
+# gem 'mysql2', group: :production
+gem 'sqlite3'
 gem 'puma', '~> 3.7'
 gem 'jbuilder', '~> 2.5'
 gem 'redis', '~> 3.0'
@@ -16,7 +16,7 @@ gem 'rails_admin', '~> 1.2'
 gem 'activerecord-import', '~> 0.19'
 
 group :development, :test do
-  gem 'sqlite3'
+  # gem 'sqlite3'
   gem 'byebug'
   gem 'rspec-rails'
   gem 'rspec-its'
@@ -24,6 +24,9 @@ group :development, :test do
   # gem 'capybara', '~> 2.13'
   # gem 'selenium-webdriver'
 end
+
+# ExecJS
+gem 'therubyracer', require: 'v8', group: :production
 
 group :development do
   # Access an IRB console on exception pages or by using <%= console %> anywhere in the code.
