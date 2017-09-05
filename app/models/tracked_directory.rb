@@ -1,5 +1,6 @@
 class TrackedDirectory < ActiveRecord::Base
 
+  before_validation :normalize_path
   validates_uniqueness_of :path
 
   def self.track!(path)
@@ -23,22 +24,32 @@ class TrackedDirectory < ActiveRecord::Base
   def track!
     service = tracked_files? ? NewFiles : Hashdeep
     hashes = service.hashes(path).to_a
+    import(hashes)
+  end
+
+  def import(hashes)
     TrackedFile.import(Hashdeep::COLUMNS, hashes)
   end
 
   def reset!
     warn <<-EOS
-This operation will remove all tracked files and associated fixity checks
-related to this directory! It cannot be undone.
+This operation will remove all tracked files associated with this directory!
+It cannot be undone.
 EOS
     print "Continue (y/N)? "
     answer = gets.chomp
     if answer == 'y'
-      tracked_files.destroy_all
-      puts "Tracked files destroyed."
+      tracked_files.delete_all
+      puts "Tracked files deleted."
     else
       puts "Operation aborted."
     end
+  end
+
+  private
+
+  def normalize_path
+    self.path = File.realdirpath(path)
   end
 
 end
