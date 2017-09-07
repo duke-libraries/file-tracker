@@ -1,4 +1,4 @@
-class FixityCheckJob < ActiveJob::Base
+class FixityCheckJob < ApplicationJob
 
   queue_as :fixity
 

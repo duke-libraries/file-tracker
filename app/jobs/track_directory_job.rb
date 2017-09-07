@@ -1,9 +1,9 @@
-class TrackDirectoryJob < ActiveJob::Base
+class TrackDirectoryJob < ApplicationJob
 
   queue_as :track
 
-  def perform(path)
-    TrackedDirectory.track!(path)
+  def perform(tracked_directory)
+    tracked_directory.track!
   end
 
 end
