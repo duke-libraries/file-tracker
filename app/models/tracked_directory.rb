@@ -25,6 +25,8 @@ class TrackedDirectory < ActiveRecord::Base
     service = tracked_files? ? NewFiles : Hashdeep
     hashes = service.hashes(path).to_a
     import(hashes)
+    self.tracked_at = DateTime.now
+    save!
   end
 
   def import(hashes)
