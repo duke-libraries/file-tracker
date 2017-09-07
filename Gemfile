@@ -15,6 +15,7 @@ gem 'figaro'
 gem 'redis', '~> 3.0'
 gem 'resque', '~> 1.27'
 gem 'resque-web', require: 'resque_web'
+gem 'resque-pool'
 
 # DelayedJob
 # gem 'delayed_job_active_record'

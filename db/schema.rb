@@ -16,6 +16,7 @@ ActiveRecord::Schema.define(version: 20170906181904) do
     t.string "path", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "tracked_at"
     t.index ["path"], name: "index_tracked_directories_on_path"
   end
 

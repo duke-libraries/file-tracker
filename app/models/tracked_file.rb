@@ -1,16 +1,11 @@
 class TrackedFile < ActiveRecord::Base
+  include TrackedFileDisplay
   include TrackedFileAdmin
 
   # fixity status
   OK      = 0
   CHANGED = 1
   MISSING = 2
-
-  DISPLAY_STATUS = {
-    OK      => "OK",
-    CHANGED => "CHANGED",
-    MISSING => "MISSING",
-  }.freeze
 
   validates_presence_of :md5, :sha1, :size, :path
   validates_uniqueness_of :path
@@ -33,6 +28,10 @@ class TrackedFile < ActiveRecord::Base
     where("path LIKE ?", "#{value}%")
   end
 
+  def to_s
+    path
+  end
+
   def fixity_check!
     self.fixity_checked_at = DateTime.now
     self.fixity_status = fixity_check
@@ -49,10 +48,6 @@ class TrackedFile < ActiveRecord::Base
 
   def fixity
     @fixity ||= Fixity.new(path, size, md5, sha1)
-  end
-
-  def fixity_display_status
-    DISPLAY_STATUS[fixity_status]
   end
 
   def calculate_fixity
