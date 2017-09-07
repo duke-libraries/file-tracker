@@ -10,26 +10,27 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170906181904) do
+ActiveRecord::Schema.define(version: 20170907203146) do
 
   create_table "tracked_directories", force: :cascade do |t|
     t.string "path", null: false
+    t.datetime "tracked_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.datetime "tracked_at"
-    t.index ["path"], name: "index_tracked_directories_on_path"
   end
 
   create_table "tracked_files", force: :cascade do |t|
-    t.string "path", limit: 65535, null: false
+    t.text "path", limit: 4096, null: false
     t.string "sha1", null: false
     t.string "md5", null: false
     t.integer "size", limit: 8, null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
     t.datetime "fixity_checked_at"
     t.integer "fixity_status"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.index ["created_at"], name: "index_tracked_files_on_created_at"
+    t.index ["fixity_checked_at"], name: "index_tracked_files_on_fixity_checked_at"
+    t.index ["fixity_status"], name: "index_tracked_files_on_fixity_status"
     t.index ["path"], name: "index_tracked_files_on_path"
     t.index ["size"], name: "index_tracked_files_on_size"
     t.index ["updated_at"], name: "index_tracked_files_on_updated_at"
