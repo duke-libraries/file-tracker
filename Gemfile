@@ -9,22 +9,28 @@ gem 'sqlite3'
 gem 'rails', '~> 5.1.3'
 gem 'puma', '~> 3.7'
 gem 'jbuilder', '~> 2.5'
+gem 'figaro'
+
+# Resque/Redis
 gem 'redis', '~> 3.0'
 gem 'resque', '~> 1.27'
 gem 'resque-web', require: 'resque_web'
+
+# DelayedJob
+# gem 'delayed_job_active_record'
+# gem 'daemons'
+
 gem 'rails_admin', '~> 1.2'
 gem 'activerecord-import', '~> 0.19'
 
 group :development, :test do
-  # gem 'sqlite3'
   gem 'byebug'
   gem 'rspec-rails'
   gem 'rspec-its'
 end
 
 group :production do
-  # gem 'mysql2'
-  # ExecJS runtime
+  gem 'mysql2'
   gem 'therubyracer', require: 'v8'
 end
 
