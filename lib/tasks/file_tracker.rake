@@ -1,4 +1,20 @@
+require 'file_tracker/version'
+
 namespace :file_tracker do
+  desc "Print application version."
+  task :version do
+    puts FileTracker::VERSION
+  end
+
+  desc "Tag version #{FileTracker::VERSION} and push to GitHub."
+  task :tag do
+    tag = "v#{FileTracker::VERSION}"
+    comment = "FileTracker #{tag}"
+    if system("git", "tag", "-a", tag, "-m", comment)
+      system("git", "push", "origin", tag)
+    end
+  end
+
   desc "Track directory (initiate or update) at the given path."
   task :track, [:path] => :environment do |t, args|
     dir = TrackedDirectory.track!(args[:path], async: true)
