@@ -34,21 +34,6 @@ class TrackedDirectory < ActiveRecord::Base
     end
   end
 
-  def reset!
-    warn <<-EOS
-This operation will remove all tracked files associated with this directory!
-It cannot be undone.
-EOS
-    print "Continue (y/N)? "
-    answer = gets.chomp
-    if answer == 'y'
-      tracked_files.delete_all
-      puts "Tracked files deleted."
-    else
-      puts "Operation aborted."
-    end
-  end
-
   def import(hashes)
     TrackedFile.import(Hashdeep::COLUMNS, hashes)
   end
