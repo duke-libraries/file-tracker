@@ -15,6 +15,34 @@ namespace :file_tracker do
     end
   end
 
+  desc "Delete all tracked directories and files from the database."
+  task :reset => :environment do
+    warn <<-EOS
+
+THIS OPERATION WILL REMOVE ALL TRACKED DIRECTORIES AND FILES FROM THE DATABASE!
+
+IT CANNOT BE UNDONE!
+
+EOS
+    print "Continue (y/N)? "
+    answer = $stdin.gets.chomp
+    if answer == 'y'
+      files = TrackedFile.delete_all
+      puts "#{files} Tracked files deleted."
+      dirs = TrackedDirectory.delete_all
+      puts "#{dirs} Tracked directories deleted."
+    else
+      puts "Operation aborted."
+    end
+  end
+
+  desc "Track all directories under an archival path."
+  task :archive, [:path] => :environment do |t, args|
+    archive = Archive.track!(args[:path], async: true)
+    puts "Tracking jobs queued for #{archive}:\n"
+    puts archive.dirs
+  end
+
   desc "Track directory (initiate or update) at the given path."
   task :track, [:path] => :environment do |t, args|
     dir = TrackedDirectory.track!(args[:path], async: true)
