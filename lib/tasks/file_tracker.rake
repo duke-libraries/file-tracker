@@ -38,21 +38,21 @@ EOS
 
   desc "Track all directories under an archival path."
   task :archive, [:path] => :environment do |t, args|
-    archive = Archive.track!(args[:path], async: true)
+    archive = Archive.track!(args[:path])
     puts "Tracking jobs queued for #{archive}:\n"
     puts archive.dirs
   end
 
   desc "Track directory (initiate or update) at the given path."
   task :track, [:path] => :environment do |t, args|
-    dir = TrackedDirectory.track!(args[:path], async: true)
-    puts "Tracking job queued for #{dir}."
+    TrackDirectoryJob.perform_later(args[:path])
+    puts "Tracking job queued for #{args[:path]}."
   end
 
   desc "Update tracked directory by ID (list IDs with `rake file_tracker:list`)."
   task :update, [:id] => :environment do |t, args|
     dir = TrackedDirectory.find(args[:id].to_i)
-    dir.track!(async: true)
+    TrackDirectoryJob.perform_later(dir)
     puts "Tracking job queued for #{dir}."
   end
 

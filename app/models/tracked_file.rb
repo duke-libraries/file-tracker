@@ -10,22 +10,18 @@ class TrackedFile < ActiveRecord::Base
   validates_presence_of :md5, :sha1, :size, :path
   validates_uniqueness_of :path
 
-  Fixity = Struct.new(:path, :size, :md5, :sha1) do
-    def self.calculate(path)
-      md5, sha1 = Digest::MD5.new, Digest::SHA1.new
-      File.open(path, "rb") do |f|
-        while buf = f.read(16384)
-          md5  << buf
-          sha1 << buf
-        end
-      end
-      new(path, File.size(path), md5.hexdigest, sha1.hexdigest)
-    end
+  def self.track!(path)
+    create! calculate_fixity(path).to_h
   end
 
   def self.under(path)
-    value = File.realpath(path || "/")
-    where("path LIKE ?", "#{value}%")
+    return all if path.blank? || path == "/"
+    value = File.realpath(path)
+    where("path LIKE ?", "#{value}/%")
+  end
+
+  def self.calculate_fixity(path)
+    Fixity.calculate(path)
   end
 
   def to_s
@@ -51,7 +47,7 @@ class TrackedFile < ActiveRecord::Base
   end
 
   def calculate_fixity
-    Fixity.calculate(path)
+    self.class.calculate_fixity(path)
   end
 
 end
