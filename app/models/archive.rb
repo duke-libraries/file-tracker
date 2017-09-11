@@ -1,10 +1,8 @@
 class Archive
   include ActiveModel::Model
 
-  def self.track!(path, async: false)
-    new(path: path).tap do |archive|
-      archive.track!(async: async)
-    end
+  def self.track!(path)
+    new(path: path).tap { |archive| archive.track! }
   end
 
   attr_accessor :path
@@ -13,18 +11,24 @@ class Archive
     path
   end
 
-  def track!(async: false)
-    dirs.each do |dir|
-      TrackedDirectory.track!(dir, async: async)
-    end
+  def track!
+    dirs.each { |dir| TrackDirectoryJob.perform_later(dir) }
   end
 
   def dirs
-    @dirs ||= children.select { |d| File.directory?(d) }
+    paths.lazy.map { |p| TrackedDirectory.find_or_create_by!(path: p) }
+  end
+
+  def paths
+    children.select { |d| File.directory?(d) }
   end
 
   def children
-    entries = Dir.entries(path) - ['.', '..'] # Ruby 2.4 has Dir.children(path)
+    entries = if Dir.respond_to?(:children)
+                Dir.children(path) # Ruby 2.4+
+              else
+                Dir.entries(path) - ['.', '..']
+              end
     entries.map { |d| File.absolute_path(d, path) }
   end
 

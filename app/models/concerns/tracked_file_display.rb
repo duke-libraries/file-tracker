@@ -1,4 +1,5 @@
 module TrackedFileDisplay
+  include CommonDisplay
 
   def display_fixity_status
     case fixity_status
@@ -19,11 +20,6 @@ module TrackedFileDisplay
       value = value + " (as of #{fixity_checked_at})"
     end
     value
-  end
-
-  def display_size
-    human_size = ActiveSupport::NumberHelper.number_to_human_size(size)
-    "#{human_size} (#{size} bytes)"
   end
 
 end
