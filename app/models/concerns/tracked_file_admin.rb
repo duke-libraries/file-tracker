@@ -2,9 +2,7 @@ module TrackedFileAdmin
   extend ActiveSupport::Concern
 
   included do
-
     rails_admin do
-
       object_label_method { :path }
 
       list do
@@ -23,9 +21,7 @@ module TrackedFileAdmin
         field :sha1
         field :display_size
       end
-
     end # rails_admin
-
   end
 
 end
