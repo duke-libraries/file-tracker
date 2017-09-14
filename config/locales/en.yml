@@ -21,4 +21,11 @@ en:
   attributes:
     created_at: Added
     id: ID
+  file_tracker:
+    fixity:
+      status:
+        0: OK
+        1: CHANGED
+        2: MISSING
+        not_checked: NOT CHECKED
   

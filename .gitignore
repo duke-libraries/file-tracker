@@ -26,3 +26,5 @@
 
 # Resque
 /config/resque-pool.yml
+
+/public/assets

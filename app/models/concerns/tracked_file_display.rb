@@ -2,15 +2,10 @@ module TrackedFileDisplay
   include CommonDisplay
 
   def display_fixity_status
-    case fixity_status
-    when 0
-      "OK"
-    when 1
-      "CHANGED"
-    when 2
-      "MISSING"
+    if fixity_status
+      I18n.t "file_tracker.fixity.status.#{fixity_status}"
     else
-      "NOT CHECKED"
+      I18n.t "file_tracker.fixity.status.not_checked"
     end
   end
 

@@ -7,8 +7,8 @@ class TrackedFile < ActiveRecord::Base
   CHANGED = 1
   MISSING = 2
 
-  validates_presence_of :md5, :sha1, :size, :path
-  validates_uniqueness_of :path
+  validates_presence_of :md5, :sha1, :size
+  validates :path, file_exists: true, uniqueness: true
 
   def self.track!(path)
     create! calculate_fixity(path).to_h
