@@ -24,6 +24,15 @@ class QueueManager
     interrupt("-TERM")
   end
 
+  def self.kill_workers
+    count = 0
+    Resque.workers.each do |w|
+      w.unregister_worker
+      count += 1
+    end
+    count
+  end
+
   def self.restart
     if stop
       while running?
@@ -40,8 +49,6 @@ class QueueManager
   end
 
   def self.running?
-    # system("pgrep", "-f", "resque-pool")
-    # system("pgrep", "-F", pidfile)
     !!pid && system("ps", "-p", pid)
   end
 

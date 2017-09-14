@@ -1,10 +1,8 @@
-require 'find'
-
 class TrackedDirectory < ActiveRecord::Base
   include TrackedDirectoryDisplay
   include TrackedDirectoryAdmin
 
-  before_validation :normalize_path
+  before_validation :normalize_path!
   validates_uniqueness_of :path
 
   def self.track!(path)
@@ -15,17 +13,21 @@ class TrackedDirectory < ActiveRecord::Base
     path
   end
 
-  def new_files
-    all_files.lazy.select { |f| TrackedFile.exists?(path: f) }
-  end
+  # def new_files
+  #   all_files.lazy.reject { |f| TrackedFile.exists?(path: f) }
+  # end
 
-  def all_files
-    find.lazy.select { |f| File.file?(f) }
-  end
+  # def all_files
+  #   find.lazy.select { |f| File.file?(f) }
+  # end
 
-  def find
-    Find.find(path)
-  end
+  # def dirs
+  #   find.lazy.reject { |d| Dir.empty?(d) }
+  # end
+
+  # def find
+  #   Find.find(path)
+  # end
 
   def tracked_files
     TrackedFile.under(path)
@@ -39,24 +41,27 @@ class TrackedDirectory < ActiveRecord::Base
     tracked_files.sum(:size)
   end
 
-  def tracked_files?
-    tracked_files.exists?
-  end
+  # def has_tracked_files?
+  #   tracked_files.exists?
+  # end
 
   def track!
-    track_files!
+    TrackChildrenJob.perform_later(path)
     self.tracked_at = DateTime.now
     save!
   end
 
-  def track_files!
-    files = tracked_files? ? new_files : all_files
-    files.each { |file| TrackFileJob.perform_later(file) }
-  end
+  # def track_dirs
+  #   dirs.each { |dir| TrackChildrenJob.perform_later(dir) }
+  # end
+
+  # def track_files
+  #   new_files.each { |file| TrackFileJob.perform_later(file) }
+  # end
 
   private
 
-  def normalize_path
+  def normalize_path!
     self.path = File.realdirpath(path)
   end
 

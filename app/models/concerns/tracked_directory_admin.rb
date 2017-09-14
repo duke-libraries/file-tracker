@@ -2,9 +2,7 @@ module TrackedDirectoryAdmin
   extend ActiveSupport::Concern
 
   included do
-
     rails_admin do
-
       object_label_method { :path }
 
       list do
@@ -24,9 +22,7 @@ module TrackedDirectoryAdmin
         field :created_at
         field :tracked_at
       end
-
     end # rails_admin
-
   end
 
 end

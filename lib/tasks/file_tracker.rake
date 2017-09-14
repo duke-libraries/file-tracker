@@ -36,23 +36,17 @@ EOS
     end
   end
 
-  desc "Track all directories under an archival path."
-  task :archive, [:path] => :environment do |t, args|
-    archive = Archive.track!(args[:path])
-    puts "Tracking jobs queued for #{archive}:\n"
-    puts archive.dirs
-  end
-
   desc "Track directory (initiate or update) at the given path."
   task :track, [:path] => :environment do |t, args|
-    TrackDirectoryJob.perform_later(args[:path])
+    dir = TrackedDirectory.find_or_create_by!(path: args[:path])
+    dir.track!
     puts "Tracking job queued for #{args[:path]}."
   end
 
   desc "Update tracked directory by ID (list IDs with `rake file_tracker:list`)."
   task :update, [:id] => :environment do |t, args|
     dir = TrackedDirectory.find(args[:id].to_i)
-    TrackDirectoryJob.perform_later(dir)
+    dir.track!
     puts "Tracking job queued for #{dir}."
   end
 
@@ -124,6 +118,12 @@ EOS
       else
         puts "QueueManager not running."
       end
+    end
+
+    desc "Kill workers immediately and fail running jobs."
+    task :kill_workers => :environment do
+      count = QueueManager.kill_workers
+      puts "#{count} QueueManager workers killed."
     end
   end
 end
