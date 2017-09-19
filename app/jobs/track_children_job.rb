@@ -17,9 +17,8 @@ class TrackChildrenJob < ApplicationJob
 
     if files.present?
       tracked_files = TrackedFile.under(path).pluck(:path)
-      (files - tracked_files).each do |file|
-        TrackFileJob.perform_later(file)
-      end
+      new_files = (files - tracked_files).map { |f| File.basename(f) }
+      HashdeepJob.perform_later(path, new_files)
     end
   end
 

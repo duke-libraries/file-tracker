@@ -14,7 +14,7 @@ class BatchFixity
 
   def self.queue(tracked_files)
     queued = tracked_files.each do |tracked_file|
-      FixityCheckJob.perform_later(tracked_file)
+      CheckFixityJob.perform_later(tracked_file)
     end
     queued.size
   end
