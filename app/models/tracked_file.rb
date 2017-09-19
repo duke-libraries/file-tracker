@@ -10,6 +10,10 @@ class TrackedFile < ActiveRecord::Base
   validates :path, file_exists: true, uniqueness: true
   after_create :generate_fixity_later, if: :generate_fixity?
 
+  def self.track!(*paths)
+    paths.each { |path| create!(path: path) }
+  end
+
   def self.under(path)
     return all if path.blank? || path == "/"
     value = File.realpath(path)
@@ -29,7 +33,7 @@ class TrackedFile < ActiveRecord::Base
   end
 
   def generate_fixity!
-    update calculate_fixity.to_h
+    update! calculate_fixity.to_h
   end
 
   def generate_fixity_later

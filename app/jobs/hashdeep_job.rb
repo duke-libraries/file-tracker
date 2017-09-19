@@ -4,8 +4,7 @@ class HashdeepJob < ApplicationJob
 
   def perform(dir)
     data = []
-    files = ( Dir.entries(dir) - ['.', '..'] ).select { |f| File.file?(File.absolute_path(f, dir)) }
-    hashdeep = %w( hashdeep -s -c md5,sha1 ) + files
+    hashdeep = %w( hashdeep -s -c md5,sha1 ) + untracked_files(dir)
 
     IO.popen(hashdeep, chdir: dir) do |io|
       io.each do |line|

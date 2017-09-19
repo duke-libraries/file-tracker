@@ -26,7 +26,7 @@ class TrackedDirectory < ActiveRecord::Base
   end
 
   def track!
-    TrackChildrenJob.perform_later(path)
+    TrackDirectoryJob.perform_later(path)
     self.tracked_at = DateTime.now
     save!
   end
