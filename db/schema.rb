@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170907203146) do
+ActiveRecord::Schema.define(version: 20170915211006) do
 
   create_table "tracked_directories", force: :cascade do |t|
     t.string "path", null: false
@@ -21,9 +21,9 @@ ActiveRecord::Schema.define(version: 20170907203146) do
 
   create_table "tracked_files", force: :cascade do |t|
     t.text "path", limit: 4096, null: false
-    t.string "sha1", null: false
-    t.string "md5", null: false
-    t.integer "size", limit: 8, null: false
+    t.string "sha1"
+    t.string "md5"
+    t.integer "size", limit: 8
     t.datetime "fixity_checked_at"
     t.integer "fixity_status"
     t.datetime "created_at", null: false

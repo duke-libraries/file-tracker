@@ -7,12 +7,8 @@ class TrackedFile < ActiveRecord::Base
   CHANGED = 1
   MISSING = 2
 
-  validates_presence_of :md5, :sha1, :size
   validates :path, file_exists: true, uniqueness: true
-
-  def self.track!(path)
-    create! calculate_fixity(path).to_h
-  end
+  after_create :generate_fixity_later, if: :generate_fixity?
 
   def self.under(path)
     return all if path.blank? || path == "/"
@@ -26,6 +22,18 @@ class TrackedFile < ActiveRecord::Base
 
   def to_s
     path
+  end
+
+  def generate_fixity?
+    size.blank? || md5.blank? || sha1.blank?
+  end
+
+  def generate_fixity!
+    update calculate_fixity.to_h
+  end
+
+  def generate_fixity_later
+    GenerateFixityJob.perform_later(self)
   end
 
   def fixity_check!
@@ -43,7 +51,7 @@ class TrackedFile < ActiveRecord::Base
   alias_method :check_fixity, :fixity_check
 
   def fixity
-    @fixity ||= Fixity.new(path, size, md5, sha1)
+    @fixity ||= Fixity.new(size, md5, sha1)
   end
 
   def calculate_fixity

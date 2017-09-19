@@ -22,7 +22,7 @@ RSpec.describe TrackedFile do
     end
 
     describe "changed (md5)" do
-      let(:fixity) { Fixity.new(path, size, "57a88467c003f53d316a92e8896833b1", sha1) }
+      let(:fixity) { Fixity.new(size, "57a88467c003f53d316a92e8896833b1", sha1) }
       before do
         allow(subject).to receive(:calculate_fixity) { fixity }
       end
@@ -30,7 +30,7 @@ RSpec.describe TrackedFile do
     end
 
     describe "changed (sha1)" do
-      let(:fixity) { Fixity.new(path, size, md5, "37781031df4573b90ef045889b7da0ab2655bf75") }
+      let(:fixity) { Fixity.new(size, md5, "37781031df4573b90ef045889b7da0ab2655bf75") }
       before do
         allow(subject).to receive(:calculate_fixity) { fixity }
       end

@@ -1,4 +1,4 @@
-Fixity = Struct.new(:path, :size, :md5, :sha1) do
+Fixity = Struct.new(:size, :md5, :sha1) do
 
   def self.calculate(path)
     md5, sha1 = Digest::MD5.new, Digest::SHA1.new
@@ -8,7 +8,7 @@ Fixity = Struct.new(:path, :size, :md5, :sha1) do
         sha1 << buf
       end
     end
-    new(path, File.size(path), md5.hexdigest, sha1.hexdigest)
+    new(File.size(path), md5.hexdigest, sha1.hexdigest)
   end
 
 end
