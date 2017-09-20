@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170920184045) do
+ActiveRecord::Schema.define(version: 20170920203306) do
 
   create_table "fixity_check_results", force: :cascade do |t|
     t.text "path", limit: 4096, null: false
@@ -19,12 +19,12 @@ ActiveRecord::Schema.define(version: 20170920184045) do
     t.integer "size", limit: 8
     t.integer "status", null: false
     t.text "error"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["created_at"], name: "index_fixity_check_results_on_created_at"
+    t.datetime "started_at", null: false
+    t.datetime "finished_at", null: false
+    t.index ["finished_at"], name: "index_fixity_check_results_on_finished_at"
     t.index ["path"], name: "index_fixity_check_results_on_path"
+    t.index ["started_at"], name: "index_fixity_check_results_on_started_at"
     t.index ["status"], name: "index_fixity_check_results_on_status"
-    t.index ["updated_at"], name: "index_fixity_check_results_on_updated_at"
   end
 
   create_table "tracked_directories", force: :cascade do |t|

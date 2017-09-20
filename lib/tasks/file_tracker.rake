@@ -1,13 +1,11 @@
-require 'file_tracker/version'
-
 namespace :file_tracker do
   desc "Print application version."
-  task :version do
+  task :version => :environment do
     puts FileTracker::VERSION
   end
 
   desc "Tag version #{FileTracker::VERSION} and push to GitHub."
-  task :tag do
+  task :tag => :environment do
     tag = "v#{FileTracker::VERSION}"
     comment = "FileTracker #{tag}"
     if system("git", "tag", "-a", tag, "-m", comment)

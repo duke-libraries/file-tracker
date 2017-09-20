@@ -1,5 +1,3 @@
-require 'file_tracker/error'
-
 class TrackedFile < ActiveRecord::Base
   include TrackedFileDisplay
   include TrackedFileAdmin
@@ -35,11 +33,11 @@ class TrackedFile < ActiveRecord::Base
   end
 
   def check_fixity!
-    self.fixity_checked_at = DateTime.now
     result = check_fixity
+    self.fixity_checked_at = result.checked_at
     self.fixity_status = result.status
     save
-    raise_fixity_error(result)
+    result.raise_error!
   end
 
   def check_fixity
@@ -64,19 +62,6 @@ class TrackedFile < ActiveRecord::Base
 
   def calculate_fixity
     Fixity.calculate(path)
-  end
-
-  private
-
-  def raise_fixity_error(result)
-    case result.status
-    when CHANGED
-      raise FileTracker::FileChangedError, result.inspect
-    when MISSING
-      raise FileTracker::FileMissingError, result.inspect
-    when ERROR
-      raise FileTracker::FixityError, result.inspect
-    end
   end
 
 end
