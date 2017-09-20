@@ -7,25 +7,33 @@ en:
       tracked_file:
         one: File
         other: Files
+      fixity_check_result:
+        one: Fixity Check Result
+        other: Fixity Check Results
     attributes:
       tracked_directory:
         count: File Count
         display_size: Total Size
         tracked_at: Inventoried
       tracked_file:
-        display_fixity_status: Fixity Status
-        display_size: Size
         fixity_checked_at: Fixity Checked
-        md5: MD5
-        sha1: SHA1
+      fixity_check_result:
+        checked_at: Checked At
+        started_at: Started
+        finished_at: Finished
   attributes:
     created_at: Added
+    display_fixity_status: Fixity Status
+    display_size: Size
     id: ID
+    md5: MD5
+    sha1: SHA1
   file_tracker:
     fixity:
       status:
         0: OK
         1: CHANGED
         2: MISSING
+        3: ERROR
         not_checked: NOT CHECKED
   
