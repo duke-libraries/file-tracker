@@ -1,4 +1,5 @@
 require 'file_tracker/utils'
+require 'find'
 
 class ApplicationJob < ActiveJob::Base
 

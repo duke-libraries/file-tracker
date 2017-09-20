@@ -4,10 +4,7 @@ class TrackedDirectory < ActiveRecord::Base
 
   before_validation :normalize_path!
   validates :path, directory_exists: true, uniqueness: true
-
-  def self.track!(path)
-    find_or_create_by!(path: path).tap { |dir| dir.track! }
-  end
+  after_create :track!
 
   def to_s
     path

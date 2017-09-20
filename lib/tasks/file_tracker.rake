@@ -36,16 +36,15 @@ EOS
     end
   end
 
-  desc "Track directory (initiate or update) at the given path."
+  desc "Track directory at the given path."
   task :track, [:path] => :environment do |t, args|
-    dir = TrackedDirectory.find_or_create_by!(path: args[:path])
-    dir.track!
-    puts "Tracking job queued for #{args[:path]}."
+    dir = TrackedDirectory.create!(path: args[:path])
+    puts "Tracking job queued for #{dir}."
   end
 
   desc "Update tracked directory by ID (list IDs with `rake file_tracker:list`)."
   task :update, [:id] => :environment do |t, args|
-    dir = TrackedDirectory.find(args[:id].to_i)
+    dir = TrackedDirectory.find!(args[:id].to_i)
     dir.track!
     puts "Tracking job queued for #{dir}."
   end

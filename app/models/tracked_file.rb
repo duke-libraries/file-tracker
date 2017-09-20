@@ -11,7 +11,7 @@ class TrackedFile < ActiveRecord::Base
   after_create :generate_fixity_later, if: :generate_fixity?
 
   def self.track!(*paths)
-    paths.each { |path| create!(path: path) }
+    paths.each { |path| find_or_create_by!(path: path) }
   end
 
   def self.under(path)
