@@ -4,8 +4,7 @@ class TrackDirectoryJob < ApplicationJob
 
   def perform(dir)
     Find.find(dir) do |path|
-      next if path == dir
-      if File.directory?(path)
+      if File.directory?(path) && path != dir
         TrackDirectoryJob.perform_later(path)
         Find.prune
       elsif File.file?(path)

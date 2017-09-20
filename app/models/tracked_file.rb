@@ -1,14 +1,12 @@
+require 'file_tracker/error'
+
 class TrackedFile < ActiveRecord::Base
   include TrackedFileDisplay
   include TrackedFileAdmin
 
-  # fixity status
-  OK      = 0
-  CHANGED = 1
-  MISSING = 2
-
-  validates :path, file_exists: true, uniqueness: true
-  after_create :generate_fixity_later, if: :generate_fixity?
+  validates :path, file_exists: true, readable: true, uniqueness: true
+  before_create :set_size, if: "size.nil?"
+  after_create :generate_fixity, unless: :has_fixity?
 
   def self.track!(*paths)
     paths.each { |path| find_or_create_by!(path: path) }
@@ -20,46 +18,65 @@ class TrackedFile < ActiveRecord::Base
     where("path LIKE ?", "#{value}/%")
   end
 
-  def self.calculate_fixity(path)
-    Fixity.calculate(path)
-  end
-
   def to_s
     path
   end
 
-  def generate_fixity?
-    size.blank? || md5.blank? || sha1.blank?
+  def has_fixity?
+    fixity.complete?
   end
 
   def generate_fixity!
-    update! calculate_fixity.to_h
+    update calculate_fixity.to_h
   end
 
-  def generate_fixity_later
+  def generate_fixity
     GenerateFixityJob.perform_later(self)
   end
 
-  def fixity_check!
+  def check_fixity!
     self.fixity_checked_at = DateTime.now
-    self.fixity_status = fixity_check
-    save!
+    result = check_fixity
+    self.fixity_status = result.status
+    save
+    raise_fixity_error(result)
   end
-  alias_method :check_fixity!, :fixity_check!
 
-  def fixity_check
-    fixity == calculate_fixity ? OK : CHANGED
-  rescue Errno::ENOENT => e
-    MISSING
+  def check_fixity
+    FixityCheckResult.call(self)
   end
-  alias_method :check_fixity, :fixity_check
 
   def fixity
-    @fixity ||= Fixity.new(size, md5, sha1)
+    Fixity.new(md5, sha1)
   end
 
   def calculate_fixity
     self.class.calculate_fixity(path)
+  end
+
+  def set_size
+    self.size = calculate_size
+  end
+
+  def calculate_size
+    File.size(path)
+  end
+
+  def calculate_fixity
+    Fixity.calculate(path)
+  end
+
+  private
+
+  def raise_fixity_error(result)
+    case result.status
+    when CHANGED
+      raise FileTracker::FileChangedError, result.inspect
+    when MISSING
+      raise FileTracker::FileMissingError, result.inspect
+    when ERROR
+      raise FileTracker::FixityError, result.inspect
+    end
   end
 
 end

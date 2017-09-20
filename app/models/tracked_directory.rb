@@ -3,7 +3,7 @@ class TrackedDirectory < ActiveRecord::Base
   include TrackedDirectoryAdmin
 
   before_validation :normalize_path!
-  validates :path, directory_exists: true, uniqueness: true
+  validates :path, directory_exists: true, readable: true, uniqueness: true
   after_create :track!
 
   def to_s
