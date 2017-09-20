@@ -1,4 +1,6 @@
 class FixityCheckResult < ActiveRecord::Base
+  include FixityCheckResultDisplay
+  include FixityCheckResultAdmin
 
   OK      = 0
   ALTERED = 1

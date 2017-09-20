@@ -17,13 +17,14 @@ en:
         tracked_at: Inventoried
       tracked_file:
         fixity_checked_at: Fixity Checked
+        display_fixity_status: Fixity Status
       fixity_check_result:
+        display_status: Status
         checked_at: Checked At
         started_at: Started
         finished_at: Finished
   attributes:
     created_at: Added
-    display_fixity_status: Fixity Status
     display_size: Size
     id: ID
     md5: MD5
