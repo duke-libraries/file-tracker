@@ -1,4 +1,5 @@
 class TrackedFile < ActiveRecord::Base
+  include HasFixity
   include TrackedFileDisplay
   include TrackedFileAdmin
 
@@ -20,48 +21,20 @@ class TrackedFile < ActiveRecord::Base
     path
   end
 
-  def has_fixity?
-    fixity.complete?
-  end
-
-  def generate_fixity!
-    update calculate_fixity.to_h
-  end
-
   def generate_fixity
     GenerateFixityJob.perform_later(self)
   end
 
   def check_fixity!
-    result = check_fixity
-    self.fixity_checked_at = result.checked_at
-    self.fixity_status = result.status
-    save
-    result.raise_error!
+    check_fixity.tap do |result|
+      self.fixity_checked_at = result.checked_at
+      self.fixity_status = result.status
+      save
+    end
   end
 
   def check_fixity
-    FixityCheckResult.call(self)
-  end
-
-  def fixity
-    Fixity.new(md5, sha1)
-  end
-
-  def calculate_fixity
-    self.class.calculate_fixity(path)
-  end
-
-  def set_size
-    self.size = calculate_size
-  end
-
-  def calculate_size
-    File.size(path)
-  end
-
-  def calculate_fixity
-    Fixity.calculate(path)
+    FixityCheck.call(self)
   end
 
 end

@@ -11,6 +11,10 @@ Fixity = Struct.new(:md5, :sha1) do
     new(md5.hexdigest, sha1.hexdigest)
   end
 
+  def to_s
+    "MD5: #{md5}; SHA1: #{sha1}"
+  end
+
   def incomplete?
     !complete?
   end

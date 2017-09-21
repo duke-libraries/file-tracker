@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170920203306) do
+ActiveRecord::Schema.define(version: 20170921213348) do
 
   create_table "fixity_check_results", force: :cascade do |t|
     t.text "path", limit: 4096, null: false
@@ -18,7 +18,7 @@ ActiveRecord::Schema.define(version: 20170920203306) do
     t.string "md5"
     t.integer "size", limit: 8
     t.integer "status", null: false
-    t.text "error"
+    t.text "message"
     t.datetime "started_at", null: false
     t.datetime "finished_at", null: false
     t.index ["finished_at"], name: "index_fixity_check_results_on_finished_at"

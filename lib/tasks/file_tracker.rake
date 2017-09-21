@@ -1,3 +1,5 @@
+require 'file_tracker/version'
+
 namespace :file_tracker do
   desc "Print application version."
   task :version => :environment do

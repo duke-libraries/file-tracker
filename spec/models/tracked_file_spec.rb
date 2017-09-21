@@ -78,7 +78,7 @@ RSpec.describe TrackedFile do
     describe "when changed" do
       describe "when size has changed" do
         before do
-          allow(subject).to receive(:calculate_size) { 410225 }
+          allow(File).to receive(:size).with(path) { 410225 }
           expect(subject).not_to receive(:calculate_fixity)
         end
         its(:check_fixity) { is_expected.to be_altered }
@@ -87,7 +87,7 @@ RSpec.describe TrackedFile do
       describe "when md5 has changed" do
         let(:fixity) { Fixity.new("57a88467c003f53d316a92e8896833b1", sha1) }
         before do
-          allow(subject).to receive(:calculate_fixity) { fixity }
+          allow(Fixity).to receive(:calculate).with(path) { fixity }
         end
         its(:check_fixity) { is_expected.to be_altered }
       end
@@ -95,7 +95,7 @@ RSpec.describe TrackedFile do
       describe "when sha1 has changed" do
         let(:fixity) { Fixity.new(md5, "37781031df4573b90ef045889b7da0ab2655bf75") }
         before do
-          allow(subject).to receive(:calculate_fixity) { fixity }
+          allow(Fixity).to receive(:calculate).with(path) { fixity }
         end
         its(:check_fixity) { is_expected.to be_altered }
       end
@@ -133,7 +133,11 @@ RSpec.describe TrackedFile do
       specify {
         subject
         FileUtils.chmod "u-r", path
-        expect(subject.check_fixity).to be_error
+        begin
+          result = subject.check_fixity
+        rescue FileTracker::FixityError
+          expect(result).to be_error
+        end
       }
     end
   end
