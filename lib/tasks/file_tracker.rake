@@ -51,7 +51,7 @@ EOS
 
   desc "Run batch fixity check routine."
   task :fixity => :environment do
-    queued = BatchFixity.call
+    queued = BatchFixityCheck.call
     puts "#{queued} fixity check jobs queued."
   end
 

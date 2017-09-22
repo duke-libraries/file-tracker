@@ -1,4 +1,4 @@
-class BatchFixity
+class BatchFixityCheck
 
   class_attribute :check_limit
   self.check_limit = ENV.fetch("BATCH_FIXITY_CHECK_LIMIT", 10**5).to_i
