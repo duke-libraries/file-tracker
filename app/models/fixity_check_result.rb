@@ -1,7 +1,6 @@
 class FixityCheckResult < ActiveRecord::Base
 
   include FileTracker::Status
-  # include HasFixity
   include FixityCheckResultDisplay
   include FixityCheckResultAdmin
 
@@ -10,14 +9,6 @@ class FixityCheckResult < ActiveRecord::Base
 
   def checked_at
     started_at
-  end
-
-  def start!
-    self.started_at = DateTime.now
-  end
-
-  def finish!
-    self.finished_at = DateTime.now
   end
 
   def ok?
