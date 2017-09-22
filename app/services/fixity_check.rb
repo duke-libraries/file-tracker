@@ -20,7 +20,7 @@ class FixityCheck
   end
 
   def check!
-    result.start!
+    start!
     begin
       check_size
       check_sha1
@@ -36,20 +36,24 @@ class FixityCheck
     else
       result.ok!
     ensure
-      result.size = size
-      result.sha1 = sha1
-      result.finish!
-      result.save! if save_result?
+      finish!
     end
     result
   end
 
-  def save_result?
-    save_result_on_status.include?(result.status)
+  def start!
+    result.started_at = DateTime.now
   end
 
-  def save_result!
-    result.save!
+  def finish!
+    result.finished_at = DateTime.now
+    result.size = size
+    result.sha1 = sha1
+    result.save! if save_result?
+  end
+
+  def save_result?
+    save_result_on_status.include?(result.status)
   end
 
   def check_size
