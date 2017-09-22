@@ -1,7 +1,7 @@
 class FixityCheckResult < ActiveRecord::Base
 
   include FileTracker::Status
-  include HasFixity
+  # include HasFixity
   include FixityCheckResultDisplay
   include FixityCheckResultAdmin
 

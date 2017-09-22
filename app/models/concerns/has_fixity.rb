@@ -3,21 +3,31 @@
 #
 module HasFixity
 
-  def fixity
-    Fixity.new(md5, sha1)
+  def set_sha1
+    self.sha1 = calculate_sha1
   end
 
-  def fixity=(fxty)
-    self.md5 = fxty.md5
-    self.sha1 = fxty.sha1
+  def set_sha1!
+    set_sha1
+    save if sha1_changed?
   end
 
-  def set_fixity
-    self.fixity = calculate_fixity
+  def set_md5
+    self.md5 = calculate_md5
+  end
+
+  def set_md5!
+    set_md5
+    save if md5_changed?
   end
 
   def set_size
     self.size = calculate_size
+  end
+
+  def set_size!
+    set_size
+    save if size_changed?
   end
 
   def calculate_size
@@ -28,8 +38,12 @@ module HasFixity
     Fixity.calculate(path)
   end
 
-  def has_fixity?
-    fixity.complete?
+  def calculate_sha1
+    Digest::SHA1.file(path).hexdigest
+  end
+
+  def calculate_md5
+    Digest::MD5.file(path).hexdigest
   end
 
 end

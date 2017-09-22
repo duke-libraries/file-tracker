@@ -39,38 +39,21 @@ RSpec.describe TrackedFile do
     end
   end
 
-  describe "it generates fixity after create" do
+  describe "it generates a SHA1 after create" do
     let(:path) { File.join(fixture_path, "nypl.jpg") }
-    let(:md5) { "57a88467c003f53d316a92e8896833b0" }
     let(:sha1) { "37781031df4573b90ef045889b7da0ab2655bf74" }
     before { subject.reload }
-    describe "when no fixity info is present" do
-      subject { described_class.create!(path: path) }
-      its(:md5) { is_expected.to eq md5 }
-      its(:sha1) { is_expected.to eq sha1 }
-    end
-    describe "when only md5 is present" do
-      subject { described_class.create!(path: path, md5: md5) }
-      its(:sha1) { is_expected.to eq sha1 }
-    end
-    describe "when only sha1 is present" do
-      subject { described_class.create!(path: path, sha1: sha1) }
-      its(:md5) { is_expected.to eq md5 }
-    end
-    describe "otherwise, fixity is not generated" do
-      subject { described_class.create!(path: path, md5: md5, sha1: sha1) }
-      it { is_expected.not_to receive(:generate_fixity) }
-    end
+    subject { described_class.create!(path: path) }
+    its(:sha1) { is_expected.to eq sha1 }
   end
 
   describe "checking fixity" do
     subject {
-      described_class.create!(path: path, size: size, md5: md5, sha1: sha1)
+      described_class.create!(path: path, size: size, sha1: sha1)
     }
 
     let(:path) { File.join(fixture_path, "nypl.jpg") }
     let(:size) { 410226 }
-    let(:md5) { "57a88467c003f53d316a92e8896833b0" }
     let(:sha1) { "37781031df4573b90ef045889b7da0ab2655bf74" }
 
     its(:check_fixity) { is_expected.to be_ok }
@@ -79,23 +62,13 @@ RSpec.describe TrackedFile do
       describe "when size has changed" do
         before do
           allow(File).to receive(:size).with(path) { 410225 }
-          expect(subject).not_to receive(:calculate_fixity)
-        end
-        its(:check_fixity) { is_expected.to be_altered }
-      end
-
-      describe "when md5 has changed" do
-        let(:fixity) { Fixity.new("57a88467c003f53d316a92e8896833b1", sha1) }
-        before do
-          allow(Fixity).to receive(:calculate).with(path) { fixity }
         end
         its(:check_fixity) { is_expected.to be_altered }
       end
 
       describe "when sha1 has changed" do
-        let(:fixity) { Fixity.new(md5, "37781031df4573b90ef045889b7da0ab2655bf75") }
         before do
-          allow(Fixity).to receive(:calculate).with(path) { fixity }
+          allow_any_instance_of(FixityCheck).to receive(:calculate_sha1) { "37781031df4573b90ef045889b7da0ab2655bf75" }
         end
         its(:check_fixity) { is_expected.to be_altered }
       end
