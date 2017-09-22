@@ -1,6 +1,11 @@
 class FixityCheck
 
+  include HasFixity
+
   attr_reader :tracked_file, :result
+  attr_accessor :size, :sha1
+
+  delegate :path, to: :tracked_file
 
   class_attribute :save_result_on_status
   self.save_result_on_status = (1..3)
@@ -18,7 +23,7 @@ class FixityCheck
     result.start!
     begin
       check_size
-      check_fixity
+      check_sha1
     rescue FileTracker::AlteredFileError => e
       result.altered!
     rescue Errno::ENOENT => e # file does not exist
@@ -31,6 +36,8 @@ class FixityCheck
     else
       result.ok!
     ensure
+      result.size = size
+      result.sha1 = sha1
       result.finish!
       result.save! if save_result?
     end
@@ -46,18 +53,18 @@ class FixityCheck
   end
 
   def check_size
-    result.set_size
-    unless result.size == tracked_file.size
+    set_size
+    unless size == tracked_file.size
       raise FileTracker::AlteredFileError,
-            "Expected size: #{tracked_file.size}; actual size: #{result.size}"
+            "Expected size: #{tracked_file.size}; actual size: #{size}"
     end
   end
 
-  def check_fixity
-    result.set_fixity
-    unless result.fixity == tracked_file.fixity
+  def check_sha1
+    set_sha1
+    unless sha1 == tracked_file.sha1
       raise FileTracker::AlteredFileError,
-            "Expected: #{tracked_file.fixity}; actual: #{result.fixity}"
+            "Expected SHA1 {#{tracked_file.sha1}}; actual SHA1 {#{sha1}}"
     end
   end
 

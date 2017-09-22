@@ -4,8 +4,8 @@ class TrackedFile < ActiveRecord::Base
   include TrackedFileAdmin
 
   validates :path, file_exists: true, readable: true, uniqueness: true
-  before_create :set_size, if: "size.nil?"
-  after_create :generate_fixity, unless: :has_fixity?
+  before_create :set_size, unless: :size
+  after_create :generate_sha1, unless: :sha1
 
   def self.track!(*paths)
     paths.each { |path| find_or_create_by!(path: path) }
@@ -21,8 +21,12 @@ class TrackedFile < ActiveRecord::Base
     path
   end
 
-  def generate_fixity
-    GenerateFixityJob.perform_later(self)
+  def generate_sha1
+    GenerateSHA1Job.perform_later(self)
+  end
+
+  def generate_md5
+    GenerateMD5Job.perform_later(self)
   end
 
   def check_fixity!
