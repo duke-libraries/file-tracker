@@ -32,9 +32,9 @@ en:
   file_tracker:
     fixity:
       status:
-        0: OK
-        1: CHANGED
-        2: MISSING
-        3: ERROR
+        :0: OK
+        :1: CHANGED
+        :2: MISSING
+        :3: ERROR
         not_checked: NOT CHECKED
   
