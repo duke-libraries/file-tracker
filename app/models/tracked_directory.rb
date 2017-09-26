@@ -1,5 +1,5 @@
 class TrackedDirectory < ActiveRecord::Base
-  include TrackedDirectoryDisplay
+
   include TrackedDirectoryAdmin
 
   before_validation :normalize_path!

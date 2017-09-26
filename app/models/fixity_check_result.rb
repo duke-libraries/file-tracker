@@ -1,7 +1,6 @@
 class FixityCheckResult < ActiveRecord::Base
 
   include FileTracker::Status
-  include FixityCheckResultDisplay
   include FixityCheckResultAdmin
 
   validates_presence_of :path

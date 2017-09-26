@@ -1,7 +1,6 @@
 class TrackedFile < ActiveRecord::Base
+
   include HasFixity
-  include FileTracker::Status
-  include TrackedFileDisplay
   include TrackedFileAdmin
 
   class_attribute :fixity_check_period
@@ -14,11 +13,15 @@ class TrackedFile < ActiveRecord::Base
   after_create :generate_sha1, unless: :sha1
 
   scope :fixity_checkable, ->{ where.not(sha1: nil) }
-  scope :not_ok, ->{ where(fixity_status: [ALTERED, MISSING, ERROR]) }
-  scope :ok, ->{ where(fixity_status: OK) }
-  scope :altered, ->{ where(fixity_status: ALTERED) }
-  scope :missing, ->{ where(fixity_status: MISSING) }
-  scope :error, ->{ where(fixity_status: ERROR) }
+  scope :fixity_status, ->(v) { where(fixity_status: v) }
+  scope :not_ok, ->{ where("fixity_status > 0") }
+  scope :fixity_not_checked, ->{ fixity_checkable.where(fixity_checked_at: nil) }
+  scope :fixity_checked, -> { where.not(fixity_checked_at: nil) }
+  scope :fixity_check_due, ->{ where("fixity_checked_at < ?", fixity_check_cutoff_date) }
+
+  %i( ok altered missing error ).each do |status|
+    scope status, ->{ fixity_status FileTracker::Status.const_get(status.upcase) }
+  end
 
   def self.track!(*paths)
     paths.each { |path| find_or_create_by!(path: path) }
@@ -28,23 +31,6 @@ class TrackedFile < ActiveRecord::Base
     return all if path.blank? || path == "/"
     value = File.realpath(path)
     where("path LIKE ?", "#{value}/%")
-  end
-
-  def self.fixity_not_checked
-    fixity_checkable
-      .where(fixity_checked_at: nil)
-      .order(created_at: :asc)
-  end
-
-  def self.fixity_checked
-    where.not(fixity_checked_at: nil)
-      .order(created_at: :asc)
-  end
-
-  def self.fixity_check_due
-    fixity_checkable
-      .where("fixity_checked_at < ?", fixity_check_cutoff_date)
-      .order(fixity_checked_at: :asc)
   end
 
   def self.fixity_check_cutoff_date

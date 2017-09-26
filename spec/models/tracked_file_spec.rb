@@ -2,6 +2,53 @@ require 'rails_helper'
 
 RSpec.describe TrackedFile do
 
+  describe "scopes" do
+    let(:path) { File.join(fixture_path, "nypl.jpg") }
+
+    describe "not_ok" do
+      specify {
+        file = TrackedFile.create(path: path)
+        expect(TrackedFile.not_ok).not_to include file
+      }
+    end
+    describe "ok" do
+      specify {
+        file = TrackedFile.create(path: path)
+        expect(TrackedFile.ok).not_to include file
+        file.fixity_status = FileTracker::Status::OK
+        file.save!
+        expect(TrackedFile.ok).to include file
+      }
+    end
+    describe "altered" do
+      specify {
+        file = TrackedFile.create(path: path)
+        expect(TrackedFile.altered).not_to include file
+        file.fixity_status = FileTracker::Status::ALTERED
+        file.save!
+        expect(TrackedFile.altered).to include file
+      }
+    end
+    describe "missing" do
+      specify {
+        file = TrackedFile.create(path: path)
+        expect(TrackedFile.missing).not_to include file
+        file.fixity_status = FileTracker::Status::MISSING
+        file.save!
+        expect(TrackedFile.missing).to include file
+      }
+    end
+    describe "error" do
+      specify {
+        file = TrackedFile.create(path: path)
+        expect(TrackedFile.error).not_to include file
+        file.fixity_status = FileTracker::Status::ERROR
+        file.save!
+        expect(TrackedFile.error).to include file
+      }
+    end
+  end
+
   describe "validation" do
     let(:file) { Tempfile.create }
     let(:path) { file.path }

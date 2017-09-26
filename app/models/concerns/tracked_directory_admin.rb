@@ -1,6 +1,6 @@
 module TrackedDirectoryAdmin
   extend ActiveSupport::Concern
-  include CommonAdmin
+  extend CommonAdmin
 
   included do
     rails_admin do
@@ -10,12 +10,14 @@ module TrackedDirectoryAdmin
         field :id
         field :path
         field :count
-        field :display_size
+        field :size do
+          pretty_size
+        end
         field :created_at do
-          strftime_format SHORT_DATE_FORMAT
+          short_date_format
         end
         field :tracked_at do
-          strftime_format SHORT_DATE_FORMAT
+          short_date_format
         end
       end
 
@@ -23,12 +25,14 @@ module TrackedDirectoryAdmin
         field :id
         field :path
         field :count
-        field :display_size
+        field :size do
+          pretty_size
+        end
         field :created_at do
-          strftime_format LONG_DATE_FORMAT
+          long_date_format
         end
         field :tracked_at do
-          strftime_format LONG_DATE_FORMAT
+          long_date_format
         end
       end
     end
