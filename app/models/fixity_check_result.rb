@@ -5,7 +5,7 @@ class FixityCheckResult < ActiveRecord::Base
   include FixityCheckResultAdmin
 
   validates_presence_of :path
-  validates_inclusion_of :status, in: (0..3)
+  validates_inclusion_of :status, in: FileTracker::Status.values, allow_nil: true
 
   def checked_at
     started_at

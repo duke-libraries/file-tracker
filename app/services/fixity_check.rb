@@ -1,14 +1,10 @@
 class FixityCheck
-
   include HasFixity
 
   attr_reader :tracked_file, :result
   attr_accessor :size, :sha1
 
   delegate :path, to: :tracked_file
-
-  class_attribute :save_result_on_status
-  self.save_result_on_status = (1..3)
 
   def self.call(tracked_file)
     new(tracked_file).check!
@@ -49,11 +45,7 @@ class FixityCheck
     result.finished_at = DateTime.now
     result.size = size
     result.sha1 = sha1
-    result.save! if save_result?
-  end
-
-  def save_result?
-    save_result_on_status.include?(result.status)
+    result.save!
   end
 
   def check_size

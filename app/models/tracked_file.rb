@@ -8,6 +8,8 @@ class TrackedFile < ActiveRecord::Base
   self.fixity_check_period = ENV.fetch("FIXITY_CHECK_PERIOD", 60).to_i
 
   validates :path, file_exists: true, readable: true, uniqueness: true
+  validates_inclusion_of :fixity_status, in: FileTracker::Status.values, allow_nil: true
+
   before_create :set_size, unless: :size
   after_create :generate_sha1, unless: :sha1
 
