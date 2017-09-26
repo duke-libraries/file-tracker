@@ -1,6 +1,3 @@
-#
-# Required attrs: path, size, md5, sha1.
-#
 module HasFixity
 
   def set_sha1

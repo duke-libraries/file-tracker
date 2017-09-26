@@ -1,5 +1,6 @@
 class TrackedFile < ActiveRecord::Base
   include HasFixity
+  include FileTracker::Status
   include TrackedFileDisplay
   include TrackedFileAdmin
 
@@ -11,6 +12,11 @@ class TrackedFile < ActiveRecord::Base
   after_create :generate_sha1, unless: :sha1
 
   scope :fixity_checkable, ->{ where.not(sha1: nil) }
+  scope :not_ok, ->{ where(fixity_status: [ALTERED, MISSING, ERROR]) }
+  scope :ok, ->{ where(fixity_status: OK) }
+  scope :altered, ->{ where(fixity_status: ALTERED) }
+  scope :missing, ->{ where(fixity_status: MISSING) }
+  scope :error, ->{ where(fixity_status: ERROR) }
 
   def self.track!(*paths)
     paths.each { |path| find_or_create_by!(path: path) }
@@ -25,6 +31,11 @@ class TrackedFile < ActiveRecord::Base
   def self.fixity_not_checked
     fixity_checkable
       .where(fixity_checked_at: nil)
+      .order(created_at: :asc)
+  end
+
+  def self.fixity_checked
+    where.not(fixity_checked_at: nil)
       .order(created_at: :asc)
   end
 

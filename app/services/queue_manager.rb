@@ -60,4 +60,12 @@ class QueueManager
     end
   end
 
+  def self.queue_sizes
+    Resque.queue_sizes
+  end
+
+  def self.queue_size(queue_name)
+    Resque.size(queue_name)
+  end
+
 end

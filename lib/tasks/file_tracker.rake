@@ -50,9 +50,9 @@ EOS
   end
 
   desc "Run batch fixity check routine."
-  task :fixity => :environment do
-    queued = BatchFixityCheck.call
-    puts "#{queued} fixity check jobs queued."
+  task :batch_fixity, [:max] => :environment do |t, args|
+    BatchFixityCheckJob.perform_later(args[:max])
+    puts "Batch fixity check job queued."
   end
 
   desc "Show count of files tracked under path."
