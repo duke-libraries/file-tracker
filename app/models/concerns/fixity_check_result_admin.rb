@@ -7,7 +7,10 @@ module FixityCheckResultAdmin
       list do
         field :path
         field :display_status
-        field :checked_at
+        field :started_at do
+          label { "Checked At" }
+          strftime_format SHORT_DATE_FORMAT
+        end
       end
 
       show do
@@ -23,7 +26,7 @@ module FixityCheckResultAdmin
         field :md5
         field :sha1
         field :display_size
-        field :error
+        field :message
       end
     end
   end
