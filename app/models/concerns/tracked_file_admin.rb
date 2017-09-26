@@ -1,6 +1,5 @@
 module TrackedFileAdmin
   extend ActiveSupport::Concern
-  extend CommonAdmin
 
   included do
     rails_admin do
@@ -9,9 +8,9 @@ module TrackedFileAdmin
       list do
         field :path
         field :created_at do
-          short_date_format
+          date_format :short
         end
-        field :fixity_status do
+        field :fixity_status, :status do
           pretty_status
         end
       end
@@ -20,17 +19,17 @@ module TrackedFileAdmin
         field :id
         field :path
         field :created_at do
-          long_date_format
+          date_format :long
         end
-        field :fixity_status do
+        field :fixity_status, :status do
           pretty_status
         end
         field :fixity_checked_at do
-          long_date_format
+          date_format :long
         end
         field :md5
         field :sha1
-        field :size do
+        field :size, :byte_size do
           pretty_size
         end
       end

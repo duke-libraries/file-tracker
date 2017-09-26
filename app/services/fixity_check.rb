@@ -21,7 +21,7 @@ class FixityCheck
       check_size
       check_sha1
     rescue FileTracker::AlteredFileError => e
-      result.altered!
+      result.altered!(e)
     rescue Errno::ENOENT => e # file does not exist
       result.missing!
     rescue Errno::EACCES => e # e.g., cannot read file

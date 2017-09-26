@@ -36,4 +36,7 @@ en:
       :2: MISSING
       :3: ERROR
       not_checked: NOT CHECKED
-  
+  time:
+    formats:
+      short: "%F"
+      long: "%F %T %Z"
