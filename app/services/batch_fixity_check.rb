@@ -12,9 +12,9 @@ class BatchFixityCheck
   end
 
   def call
-    count = queue TrackedFile.fixity_not_checked.limit(max)
-    if count < max
-      count += queue TrackedFile.fixity_check_due.limit(max - count)
+    count = queue TrackedFile.fixity_not_checked.limit(limit)
+    if count < limit
+      count += queue TrackedFile.fixity_check_due.limit(limit - count)
     end
     count
   end
