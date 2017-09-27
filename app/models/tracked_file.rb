@@ -3,9 +3,6 @@ class TrackedFile < ActiveRecord::Base
   include HasFixity
   include TrackedFileAdmin
 
-  class_attribute :fixity_check_period
-  self.fixity_check_period = ENV.fetch("FIXITY_CHECK_PERIOD", 60).to_i
-
   validates :path, file_exists: true, readable: true, uniqueness: true
   validates_inclusion_of :fixity_status, in: FileTracker::Status.values, allow_nil: true
 
@@ -20,7 +17,7 @@ class TrackedFile < ActiveRecord::Base
   scope :fixity_check_due, ->{ where("fixity_checked_at < ?", fixity_check_cutoff_date) }
 
   %i( ok altered missing error ).each do |status|
-    scope status, ->{ fixity_status FileTracker::Status.const_get(status.upcase) }
+    scope status, ->{ fixity_status FileTracker::Status.send(status) }
   end
 
   def self.track!(*paths)
@@ -34,7 +31,7 @@ class TrackedFile < ActiveRecord::Base
   end
 
   def self.fixity_check_cutoff_date
-    DateTime.now - fixity_check_period.days
+    DateTime.now - FileTracker.fixity_check_period.days
   end
 
   def to_s

@@ -1,20 +1,19 @@
 class BatchFixityCheck
 
-  class_attribute :limit
-  self.limit = ENV.fetch("BATCH_FIXITY_CHECK_LIMIT", 10**5).to_i
+  attr_accessor :max
 
   def self.call(max = nil)
     new(max).call
   end
 
   def initialize(max = nil)
-    self.limit = max.to_i if max
+    @max = max ? max.to_i : FileTracker.batch_fixity_check_limit
   end
 
   def call
-    count = queue(not_checked.limit(limit))
-    if count < limit
-      count += queue(check_due.limit(limit - count))
+    count = queue(not_checked.limit(max))
+    if count < max
+      count += queue(check_due.limit(max - count))
     end
     count
   end
