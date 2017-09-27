@@ -2,45 +2,39 @@ module TrackedDirectoryAdmin
   extend ActiveSupport::Concern
 
   included do
-
     rails_admin do
-
       object_label_method { :path }
 
       list do
-        field :id do
-          label { "ID" }
-        end
+        field :id
         field :path
-        field :count do
-          label { "File Count" }
+        field :count
+        field :size, :byte_size do
+          pretty_size
         end
         field :created_at do
-          label { "Added" }
+          date_format :short
         end
         field :tracked_at do
-          label { "Inventoried" }
+          date_format :short
         end
       end
 
       show do
-        field :id do
-          label { "ID" }
-        end
+        field :id
         field :path
-        field :count do
-          label { "File Count" }
+        field :count
+        field :size, :byte_size do
+          pretty_size
         end
         field :created_at do
-          label { "Added" }
+          date_format :long
         end
         field :tracked_at do
-          label { "Inventoried" }
+          date_format :long
         end
       end
-
-    end # rails_admin
-
+    end
   end
 
 end

@@ -2,13 +2,43 @@ require 'rails_helper'
 
 RSpec.describe TrackedDirectory do
 
+  describe "file tracking" do
+    let(:path) { fixture_path }
+    subject { described_class.create!(path: path) }
+
+    specify {
+      file = subject.tracked_files.first
+      expect(file.size).to eq 410226
+      expect(file.path).to eq File.join(path, "nypl.jpg")
+    }
+  end
+
+  describe "validation" do
+    subject { described_class.new(path: path) }
+    let(:path) { Dir.mktmpdir }
+    after { Dir.rmdir(path) if Dir.exist?(path) }
+
+    describe "existence violation" do
+      before { Dir.rmdir(path) }
+      it { is_expected.to be_invalid }
+    end
+
+    describe "readable violation" do
+      before { FileUtils.chmod "u-r", path }
+      it { is_expected.to be_invalid }
+    end
+
+    describe "uniqueness violation" do
+      before { described_class.create!(path: path) }
+      it { is_expected.to be_invalid }
+    end
+  end
+
   describe "normalization of path" do
     subject { described_class.new(path: path) }
-    describe "when it has a trailing slash" do
-      let(:path) { File.join(fixture_path, "tracked_directory/") }
-      before { subject.valid? }
-      its(:path) { is_expected.to eq File.join(fixture_path, "tracked_directory") }
-    end
+    let(:path) { "#{fixture_path}/" }
+    before { subject.valid? }
+    its(:path) { is_expected.to eq fixture_path }
   end
 
 end

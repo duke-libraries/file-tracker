@@ -11,15 +11,10 @@ gem 'puma', '~> 3.7'
 gem 'jbuilder', '~> 2.5'
 gem 'figaro'
 
-# Resque/Redis
 gem 'redis', '~> 3.0'
 gem 'resque', '~> 1.27'
 gem 'resque-web', require: 'resque_web'
 gem 'resque-pool'
-
-# DelayedJob
-# gem 'delayed_job_active_record'
-# gem 'daemons'
 
 gem 'rails_admin', '~> 1.2'
 gem 'activerecord-import', '~> 0.19'
