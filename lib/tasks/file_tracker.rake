@@ -1,4 +1,4 @@
-require 'file_tracker/version'
+require 'file_tracker'
 
 namespace :file_tracker do
   desc "Print application version."
@@ -36,26 +36,25 @@ EOS
     end
   end
 
-  desc "Track directory at the given path."
+  desc "Track a new directory at the given path."
   task :track, [:path] => :environment do |t, args|
     dir = TrackedDirectory.create!(path: args[:path])
     puts "Tracking job queued for #{dir}."
   end
 
-  desc "Update tracked directory by ID (list IDs with `rake file_tracker:list`)."
+  desc "Update a tracked directory by ID (list IDs with `rake file_tracker:list`)."
   task :update, [:id] => :environment do |t, args|
-    dir = TrackedDirectory.find!(args[:id].to_i)
-    dir.track!
+    dir = TrackedDirectory.update(args[:id].to_i)
     puts "Tracking job queued for #{dir}."
   end
 
-  desc "Run batch fixity check routine."
-  task :batch_fixity, [:max] => :environment do |t, args|
-    BatchFixityCheckJob.perform_later(args[:max])
-    puts "Batch fixity check job queued."
+  desc "Update all tracked directories."
+  task :update_all => :environment do
+    TrackedDirectory.update_all
+    puts "All tracked directories have been queued for updating."
   end
 
-  desc "Show count of files tracked under path."
+  desc "Show the count of files tracked under a path."
   task :count, [:path] => :environment do |t, args|
     count = TrackedFile.under(args[:path]).count
     puts "#{count} files tracked under path #{args[:path] || '/'}."
@@ -71,8 +70,30 @@ EOS
     end
   end
 
+  desc "List status codes and translations."
+  task :status => :environment do
+    FileTracker::Status.values.each do |value|
+      puts [ value.to_s, I18n.t("file_tracker.status.#{value}") ].join("\t")
+    end
+  end
+
+  namespace :fixity do
+    desc "Run the batch fixity check routine, optionally overriding the default limit (#{FileTracker.batch_fixity_check_limit})."
+    task :check, [:max] => :environment do |t, args|
+      BatchFixityCheckJob.perform_later(args[:max])
+      puts "Batch fixity check job queued."
+    end
+
+    desc "Print a summary report of fixity status."
+    task :summary => :environment do
+      FixitySummary.call.each do |status, count|
+        puts "#{status}\t#{count}"
+      end
+    end
+  end
+
   namespace :queues do
-    desc "Print status of QueueManager."
+    desc "Print the status of the QueueManager."
     task :status => :environment do
       if QueueManager.running?
         puts "QueueManager is running."
@@ -81,7 +102,7 @@ EOS
       end
     end
 
-    desc "Start background job queues."
+    desc "Start the QueueManager."
     task :start => :environment do
       if QueueManager.start
         while !QueueManager.running?
@@ -93,7 +114,7 @@ EOS
       end
     end
 
-    desc "Stop background job queues."
+    desc "Stop the QueueManager."
     task :stop => :environment do
       if QueueManager.stop
         while QueueManager.running?
@@ -105,12 +126,12 @@ EOS
       end
     end
 
-    desc "Restart background job queues."
+    desc "Restart the QueueManager."
     task :restart => [:stop, :start] do
-      # puts "QueueManager restarted."
+      # stop, start
     end
 
-    desc "Reload background job queue configuration."
+    desc "Reload the QueueManager configuration."
     task :reload => :environment do
       if QueueManager.reload
         puts "QueueManager configuration reloaded."
@@ -119,7 +140,7 @@ EOS
       end
     end
 
-    desc "Kill workers immediately and fail running jobs."
+    desc "Kill QueueManager workers immediately and fail running jobs."
     task :kill_workers => :environment do
       count = QueueManager.kill_workers
       puts "#{count} QueueManager workers killed."

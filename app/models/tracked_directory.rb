@@ -6,6 +6,14 @@ class TrackedDirectory < ActiveRecord::Base
   validates :path, directory_exists: true, readable: true, uniqueness: true
   after_create :track!
 
+  def self.update_all
+    all.each(&:track!)
+  end
+
+  def self.update(id)
+    find(id).track!
+  end
+
   def to_s
     path
   end
@@ -26,6 +34,7 @@ class TrackedDirectory < ActiveRecord::Base
     TrackDirectoryJob.perform_later(path)
     self.tracked_at = DateTime.now
     save!
+    self
   end
 
   private

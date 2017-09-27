@@ -1,6 +1,5 @@
 module FixityCheckResultAdmin
   extend ActiveSupport::Concern
-  extend CommonAdmin
 
   included do
     rails_admin do
@@ -8,30 +7,30 @@ module FixityCheckResultAdmin
 
       list do
         field :path
-        field :status do
+        field :status, :status do
           pretty_status
         end
         field :started_at do
           label { "Checked At" }
-          short_date_format
+          date_format :short
         end
       end
 
       show do
         field :id
         field :path
-        field :status do
+        field :status, :status do
           pretty_status
         end
         field :started_at do
-          long_date_format
+          date_format :long
         end
         field :finished_at do
-          long_date_format
+          date_format :long
         end
         field :md5
         field :sha1
-        field :size do
+        field :size, :byte_size do
           pretty_size
         end
         field :message
