@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170921213348) do
+ActiveRecord::Schema.define(version: 20170928171653) do
 
   create_table "fixity_check_results", force: :cascade do |t|
     t.text "path", limit: 4096, null: false
@@ -25,6 +25,23 @@ ActiveRecord::Schema.define(version: 20170921213348) do
     t.index ["path"], name: "index_fixity_check_results_on_path"
     t.index ["started_at"], name: "index_fixity_check_results_on_started_at"
     t.index ["status"], name: "index_fixity_check_results_on_status"
+  end
+
+  create_table "tracked_changes", force: :cascade do |t|
+    t.text "path", limit: 4096, null: false
+    t.string "sha1"
+    t.integer "size", limit: 8
+    t.datetime "discovered_at", null: false
+    t.integer "change_type", null: false
+    t.integer "change_status"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["change_status"], name: "index_tracked_changes_on_change_status"
+    t.index ["change_type"], name: "index_tracked_changes_on_change_type"
+    t.index ["created_at"], name: "index_tracked_changes_on_created_at"
+    t.index ["discovered_at"], name: "index_tracked_changes_on_discovered_at"
+    t.index ["path"], name: "index_tracked_changes_on_path"
+    t.index ["updated_at"], name: "index_tracked_changes_on_updated_at"
   end
 
   create_table "tracked_directories", force: :cascade do |t|

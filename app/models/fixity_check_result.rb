@@ -10,38 +10,17 @@ class FixityCheckResult < ActiveRecord::Base
     started_at
   end
 
-  def ok?
-    status == OK
-  end
+  %w( ok modified missing error ).each do |stat|
+    value = FileTracker::Status.send(stat)
 
-  def ok!
-    self.status = OK
-  end
+    define_method "#{stat}?" do
+      status == value
+    end
 
-  def missing?
-    status == MISSING
-  end
-
-  def missing!
-    self.status = MISSING
-  end
-
-  def altered?
-    status == ALTERED
-  end
-
-  def altered!(exc = nil)
-    self.status = ALTERED
-    self.message = exc.inspect if exc
-  end
-
-  def error?
-    status == ERROR
-  end
-
-  def error!(exc)
-    self.status = ERROR
-    self.message = exc.inspect
+    define_method "#{stat}!" do |message = nil|
+      self.status = value
+      self.message = message if message
+    end
   end
 
 end

@@ -20,13 +20,13 @@ RSpec.describe TrackedFile do
         expect(TrackedFile.ok).to include file
       }
     end
-    describe "altered" do
+    describe "modified" do
       specify {
         file = TrackedFile.create(path: path)
-        expect(TrackedFile.altered).not_to include file
-        file.fixity_status = FileTracker::Status::ALTERED
+        expect(TrackedFile.modified).not_to include file
+        file.fixity_status = FileTracker::Status::MODIFIED
         file.save!
-        expect(TrackedFile.altered).to include file
+        expect(TrackedFile.modified).to include file
       }
     end
     describe "missing" do
@@ -110,14 +110,14 @@ RSpec.describe TrackedFile do
         before do
           allow(File).to receive(:size).with(path) { 410225 }
         end
-        its(:check_fixity) { is_expected.to be_altered }
+        its(:check_fixity) { is_expected.to be_modified }
       end
 
       describe "when sha1 has changed" do
         before do
           allow_any_instance_of(FixityCheck).to receive(:calculate_sha1) { "37781031df4573b90ef045889b7da0ab2655bf75" }
         end
-        its(:check_fixity) { is_expected.to be_altered }
+        its(:check_fixity) { is_expected.to be_modified }
       end
     end
 

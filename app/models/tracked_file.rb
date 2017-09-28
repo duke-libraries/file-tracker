@@ -8,6 +8,7 @@ class TrackedFile < ActiveRecord::Base
 
   before_create :set_size, unless: :size
   after_create :generate_sha1, unless: :sha1
+  after_destroy :delete_fixity_check_results
 
   scope :fixity_checkable, ->{ where.not(sha1: nil) }
   scope :fixity_status, ->(v) { where(fixity_status: v) }
@@ -16,7 +17,7 @@ class TrackedFile < ActiveRecord::Base
   scope :fixity_checked, -> { where.not(fixity_checked_at: nil) }
   scope :fixity_check_due, ->{ where("fixity_checked_at < ?", fixity_check_cutoff_date) }
 
-  %i( ok altered missing error ).each do |status|
+  %i( ok modified missing error ).each do |status|
     scope status, ->{ fixity_status FileTracker::Status.send(status) }
   end
 
@@ -56,6 +57,14 @@ class TrackedFile < ActiveRecord::Base
 
   def check_fixity
     FixityCheck.call(self)
+  end
+
+  def fixity_check_results
+    FixityCheckResult.where(path: path)
+  end
+
+  def delete_fixity_check_results
+    fixity_check_results.delete_all
   end
 
 end

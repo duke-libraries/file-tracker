@@ -20,14 +20,14 @@ class FixityCheck
     begin
       check_size
       check_sha1
-    rescue FileTracker::AlteredFileError => e
-      result.altered!(e)
+    rescue FileTracker::ModifiedFileError => e
+      result.modified!(e.inspect)
     rescue Errno::ENOENT => e # file does not exist
       result.missing!
     rescue Errno::EACCES => e # e.g., cannot read file
-      result.error!(e)
+      result.error!(e.inspect)
     rescue Exception => e # some other issue
-      result.error!(e)
+      result.error!(e.inspect)
       raise
     else
       result.ok!
@@ -51,7 +51,7 @@ class FixityCheck
   def check_size
     set_size
     unless size == tracked_file.size
-      raise FileTracker::AlteredFileError,
+      raise FileTracker::ModifiedFileError,
             "Expected size: #{tracked_file.size}; actual size: #{size}"
     end
   end
@@ -59,7 +59,7 @@ class FixityCheck
   def check_sha1
     set_sha1
     unless sha1 == tracked_file.sha1
-      raise FileTracker::AlteredFileError,
+      raise FileTracker::ModifiedFileError,
             "Expected SHA1 {#{tracked_file.sha1}}; actual SHA1 {#{sha1}}"
     end
   end
