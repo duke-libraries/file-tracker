@@ -3,12 +3,14 @@ class TrackedFile < ActiveRecord::Base
   include HasFixity
   include TrackedFileAdmin
 
+  has_many :fixity_checks, dependent: :destroy
+  has_many :tracked_changes, dependent: :destroy
+
   validates :path, file_exists: true, readable: true, uniqueness: true
   validates_inclusion_of :fixity_status, in: FileTracker::Status.values, allow_nil: true
 
   before_create :set_size, unless: :size
   after_create :generate_sha1, unless: :sha1
-  after_destroy :delete_fixity_check_results
 
   scope :fixity_checkable, ->{ where.not(sha1: nil) }
   scope :fixity_status, ->(v) { where(fixity_status: v) }
@@ -48,23 +50,7 @@ class TrackedFile < ActiveRecord::Base
   end
 
   def check_fixity!
-    check_fixity.tap do |result|
-      self.fixity_checked_at = result.checked_at
-      self.fixity_status = result.status
-      save
-    end
-  end
-
-  def check_fixity
     FixityCheck.call(self)
-  end
-
-  def fixity_check_results
-    FixityCheckResult.where(path: path)
-  end
-
-  def delete_fixity_check_results
-    fixity_check_results.delete_all
   end
 
 end
