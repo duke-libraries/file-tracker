@@ -4,6 +4,7 @@ class AddForeignKeyToFixityChecks < ActiveRecord::Migration[5.1]
       t.references :tracked_file
     end
 
-    remove_column :fixity_checks, :path, :text, limit: 4096, null: false, index: { length: 255 }, default: ''
+    # Moved to previous migration due to MySQL compatibility issue.
+    # remove_column :fixity_checks, :path, :text, limit: 4096, null: false, index: { length: 255 }, default: ''
   end
 end
