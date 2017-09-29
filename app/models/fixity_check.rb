@@ -95,6 +95,8 @@ class FixityCheck < ActiveRecord::Base
   def track_change
     TrackedChange.create(tracked_file: tracked_file,
                          change_type: status,
+                         size: size,
+                         sha1: sha1,
                          discovered_at: started_at)
   end
 
