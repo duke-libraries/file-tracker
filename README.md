@@ -21,10 +21,10 @@ MySQL database creation:
 
 ## Job queues
 
-    directory             recursive directory inventory
-    batch_fixity          batch fixity job - should only need 1 worker
-    check_fixity          ixity checks
-    check_fixity_large    fixity checks on large files
+    directory             Recursive directory inventory
+    batch_fixity          Batch fixity job - should only need 1 worker
+    check_fixity          Fixity checks
+    check_fixity_large    Fixity checks on large files
     generate_sha1         SHA1 digest generation
     generate_sha1_large   SHA1 digest generation for large files
     generate_md5          MD5 digest generation
@@ -68,7 +68,7 @@ for the sake of efficiency.
 
 To run a batch fixity check for files that are due to be (re-)checked, run:
 
-    rake file_tracker:batch_fixity[:max]
+    rake file_tracker:fixity:check[:max]
 
 The `[:max]` argument is optional and, if present, overrides `BATCH_FIXITY_CHECK_LIMIT`.
 
