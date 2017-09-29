@@ -20,13 +20,13 @@ RSpec.describe TrackedFile do
         expect(TrackedFile.ok).to include file
       }
     end
-    describe "altered" do
+    describe "modified" do
       specify {
         file = TrackedFile.create(path: path)
-        expect(TrackedFile.altered).not_to include file
-        file.fixity_status = FileTracker::Status::ALTERED
+        expect(TrackedFile.modified).not_to include file
+        file.fixity_status = FileTracker::Status::MODIFIED
         file.save!
-        expect(TrackedFile.altered).to include file
+        expect(TrackedFile.modified).to include file
       }
     end
     describe "missing" do
@@ -103,21 +103,47 @@ RSpec.describe TrackedFile do
     let(:size) { 410226 }
     let(:sha1) { "37781031df4573b90ef045889b7da0ab2655bf74" }
 
-    its(:check_fixity) { is_expected.to be_ok }
+    its(:check_fixity!) { is_expected.to be_ok }
 
     describe "when changed" do
       describe "when size has changed" do
         before do
           allow(File).to receive(:size).with(path) { 410225 }
         end
-        its(:check_fixity) { is_expected.to be_altered }
+        its(:check_fixity!) { is_expected.to be_modified }
+        describe "tracking the modification change" do
+          specify {
+            expect { subject.check_fixity! }.to change(subject.tracked_changes, :count).by(1)
+          }
+          specify {
+            subject.check_fixity!
+            tracked_change = subject.tracked_changes.last
+            expect(tracked_change).to be_modification
+            expect(tracked_change.size).to eq 410225
+            expect(tracked_change.sha1).to be_nil
+            expect(tracked_change.discovered_at).to eq subject.fixity_checked_at
+          }
+        end
       end
 
       describe "when sha1 has changed" do
         before do
           allow_any_instance_of(FixityCheck).to receive(:calculate_sha1) { "37781031df4573b90ef045889b7da0ab2655bf75" }
         end
-        its(:check_fixity) { is_expected.to be_altered }
+        its(:check_fixity!) { is_expected.to be_modified }
+        describe "tracking the modification change" do
+          specify {
+            expect { subject.check_fixity! }.to change(subject.tracked_changes, :count).by(1)
+          }
+          specify {
+            subject.check_fixity!
+            tracked_change = subject.tracked_changes.last
+            expect(tracked_change).to be_modification
+            expect(tracked_change.size).to eq subject.size
+            expect(tracked_change.sha1).to eq "37781031df4573b90ef045889b7da0ab2655bf75"
+            expect(tracked_change.discovered_at).to eq subject.fixity_checked_at
+          }
+        end
       end
     end
 
@@ -129,13 +155,27 @@ RSpec.describe TrackedFile do
         file.binmode
         file.write File.read(File.join(fixture_path, "nypl.jpg"))
         file.close
+        subject
+        File.unlink(path)
       end
 
       specify {
-        subject
-        File.unlink(path)
-        expect(subject.check_fixity).to be_missing
+        expect(subject.check_fixity!).to be_missing
       }
+
+      describe "tracking the deletion" do
+        specify {
+          expect { subject.check_fixity! }.to change(subject.tracked_changes, :count).by(1)
+        }
+        specify {
+          subject.check_fixity!
+          tracked_change = subject.tracked_changes.last
+          expect(tracked_change).to be_deletion
+          expect(tracked_change.size).to be_nil
+          expect(tracked_change.sha1).to be_nil
+          expect(tracked_change.discovered_at).to eq subject.fixity_checked_at
+        }
+      end
     end
 
     describe "when file is not readable" do
@@ -146,19 +186,20 @@ RSpec.describe TrackedFile do
         file.binmode
         file.write File.read(File.join(fixture_path, "nypl.jpg"))
         file.close
+        subject
+        FileUtils.chmod "u-r", path
       end
 
       after { File.unlink(path) }
 
       specify {
-        subject
-        FileUtils.chmod "u-r", path
-        begin
-          result = subject.check_fixity
-        rescue FileTracker::FixityError
-          expect(result).to be_error
-        end
+        expect(subject.check_fixity!).to be_error
       }
+
+      it "doesn't track the error as a change" do
+        expect { subject.check_fixity! }.not_to change(subject.tracked_changes, :count)
+      end
+
     end
   end
 

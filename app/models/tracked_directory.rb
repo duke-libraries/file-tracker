@@ -14,6 +14,10 @@ class TrackedDirectory < ActiveRecord::Base
     find(id).track!
   end
 
+  def listener
+    ListenerFactory.call(path)
+  end
+
   def to_s
     path
   end
