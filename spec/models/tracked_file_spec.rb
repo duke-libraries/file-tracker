@@ -121,7 +121,6 @@ RSpec.describe TrackedFile do
             expect(tracked_change).to be_modification
             expect(tracked_change.size).to eq 410225
             expect(tracked_change.sha1).to be_nil
-            expect(tracked_change.discovered_at).to eq subject.fixity_checked_at
           }
         end
       end
@@ -141,7 +140,6 @@ RSpec.describe TrackedFile do
             expect(tracked_change).to be_modification
             expect(tracked_change.size).to eq subject.size
             expect(tracked_change.sha1).to eq "37781031df4573b90ef045889b7da0ab2655bf75"
-            expect(tracked_change.discovered_at).to eq subject.fixity_checked_at
           }
         end
       end
@@ -173,7 +171,6 @@ RSpec.describe TrackedFile do
           expect(tracked_change).to be_deletion
           expect(tracked_change.size).to be_nil
           expect(tracked_change.sha1).to be_nil
-          expect(tracked_change.discovered_at).to eq subject.fixity_checked_at
         }
       end
     end
