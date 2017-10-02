@@ -92,6 +92,32 @@ EOS
     end
   end
 
+  namespace :listener do
+    desc "Start the listener."
+    task :start => :environment do
+      print "Starting listener ... "
+      Listener.instance.start
+      puts "started (PID: #{Listener.instance.pid})"
+    end
+
+    desc "Print the status of the listener."
+    task :status => :environment do
+      print "Listener status: "
+      if Listener.instance.running?
+        puts "started (PID: #{Listener.instance.pid})."
+      else
+        puts "stopped."
+      end
+    end
+
+    desc "Stop the listener."
+    task :stop => :environment do
+      puts "Stopping listener (PID: #{Listener.instance.pid}) ... "
+      Listener.instance.stop
+      puts "stopped."
+    end
+  end
+
   namespace :queues do
     desc "Print the status of the QueueManager."
     task :status => :environment do

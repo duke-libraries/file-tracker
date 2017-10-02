@@ -1,14 +1,19 @@
 class TrackedChange < ActiveRecord::Base
 
-  include FileTracker::Change::Type
-  include FileTracker::Change::Status
+  include FileTracker::Change
+  include HasFixity
   include TrackedChangeAdmin
 
   belongs_to :tracked_file
 
+  delegate :path, to: :tracked_file
+
   validates_presence_of :tracked_file, :discovered_at
-  validates_inclusion_of :change_type, in: [ MODIFICATION, DELETION ]
-  validates_inclusion_of :change_status, in: [ ACCEPTED, REJECTED ], allow_nil: true
+  validates_inclusion_of :change_type, in: FileTracker::Change::Type.values
+  validates_inclusion_of :change_status, in: FileTracker::Change::Status.values, allow_nil: true
+
+  before_validation :set_discovered_at, unless: :discovered_at
+  before_create :set_size, unless: :size, if: :modification?
 
   scope :pending, ->{ where(change_status: nil) }
 
@@ -37,7 +42,7 @@ class TrackedChange < ActiveRecord::Base
     end
   end
 
-  %w( pending accepted rejected ).each do |status|
+  %w( accepted rejected ).each do |status|
     value = const_get(status.upcase)
 
     define_method "#{status}?" do
@@ -59,6 +64,10 @@ class TrackedChange < ActiveRecord::Base
 
   def accept_deletion
     tracked_file.destroy # destroys all tracked changes related to tracked file!
+  end
+
+  def set_discovered_at
+    self.discovered_at = DateTime.now
   end
 
 end

@@ -1,4 +1,5 @@
 require 'file_tracker/version'
+require 'file_tracker/constants'
 require 'file_tracker/configuration'
 require 'file_tracker/error'
 require 'file_tracker/status'
