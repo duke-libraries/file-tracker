@@ -19,12 +19,22 @@ class TrackedFile < ActiveRecord::Base
   scope :fixity_checked, -> { where.not(fixity_checked_at: nil) }
   scope :fixity_check_due, ->{ where("fixity_checked_at < ?", fixity_check_cutoff_date) }
 
-  %i( ok modified missing error ).each do |status|
-    scope status, ->{ fixity_status FileTracker::Status.send(status) }
+  FileTracker::Status.keys.each do |key|
+    scope key, ->{ fixity_status FileTracker::Status.send(key) }
+
+    value = FileTracker::Status.send(key)
+
+    define_method "#{key}?" do
+      fixity_status == value
+    end
+
+    define_method "#{key}!" do
+      self.fixity_status = value
+    end
   end
 
   def self.track!(*paths)
-    paths.each { |path| find_or_create_by!(path: path) }
+    paths.each { |path| find_or_initialize_by(path: path).track! }
   end
 
   def self.under(path)
@@ -51,6 +61,22 @@ class TrackedFile < ActiveRecord::Base
 
   def check_fixity!
     FixityCheck.call(self)
+  end
+
+  def track!
+    if new_record?
+      save!
+    elsif ok? || fixity_status.nil?
+      check_size!
+    end
+  end
+
+  def check_size!
+    if size != (current_size = calculate_size)
+      # Don't track the same change twice ...
+      TrackedChange.find_or_create_by(tracked_file: self, change_type: FileTracker::Change::MODIFICATION, size: current_size)
+      # XXX update fixity_status to MODIFIED ?
+    end
   end
 
 end

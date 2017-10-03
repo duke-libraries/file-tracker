@@ -1,6 +1,6 @@
 # file-tracker
 
-A simple application for tracking files in directories. :)
+A Rails application for tracking files in directories.
 
 ## Requirements
 
@@ -79,3 +79,7 @@ Fixity check jobs will be created in two queues:
     check_fixity_large (file size > large file threshhold)
 
 Large files are handled in a separate queue for the sake of efficiency.
+
+## Possible Enhancements
+
+- Listener(s) based on the [listen](https://github.com/guard/listen) gem.
