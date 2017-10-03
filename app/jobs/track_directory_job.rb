@@ -8,7 +8,7 @@ class TrackDirectoryJob < ApplicationJob
         TrackDirectoryJob.perform_later(path)
         Find.prune
       elsif File.file?(path)
-        TrackedFile.find_or_create_by!(path: path)
+        TrackedFile.track!(path)
       end
     end
   end

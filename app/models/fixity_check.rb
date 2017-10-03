@@ -20,14 +20,14 @@ class FixityCheck < ActiveRecord::Base
     end
   end
 
-  %w( ok modified missing error ).each do |stat|
-    value = FileTracker::Status.send(stat)
+  FileTracker::Status.keys.each do |key|
+    value = FileTracker::Status.send(key)
 
-    define_method "#{stat}?" do
+    define_method "#{key}?" do
       status == value
     end
 
-    define_method "#{stat}!" do |message = nil|
+    define_method "#{key}!" do |message = nil|
       self.status = value
       self.message = message if message
     end
