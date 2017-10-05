@@ -6,33 +6,57 @@ RSpec.describe TrackedFile do
     let(:path) { File.join(fixture_path, "nypl.jpg") }
     describe "size calculation" do
       describe "when size is provided" do
+        subject { described_class.new(path: path, size: 410226) }
         it "does not set the size" do
-          expect_any_instance_of(described_class).not_to receive(:set_size)
-          described_class.create!(path: path, size: 410226)
+          expect(subject).not_to receive(:size=)
+          subject.save!
         end
       end
       describe "when size is not provided" do
+        subject { described_class.new(path: path) }
         it "sets the size" do
-          expect_any_instance_of(described_class).to receive(:set_size).and_call_original
-          file = described_class.create!(path: path)
-          expect(file.size).to eq 410226
+          expect(subject).to receive(:size=).and_call_original
+          subject.save!
+          expect(subject.size).to eq 410226
         end
       end
     end
     describe "SHA1 generation" do
       let(:sha1) { "37781031df4573b90ef045889b7da0ab2655bf74" }
       describe "when a SHA1 is provided" do
-        it "does not generate a SHA1" do
-          expect_any_instance_of(described_class).not_to receive(:generate_sha1)
-          described_class.create!(path: path, sha1: sha1)
+        subject { described_class.new(path: path, sha1: sha1) }
+        it "does not try to generate a SHA1" do
+          expect(subject).not_to receive(:generate_sha1)
+          subject.save!
+        end
+        describe "when explicitly calling #generate_sha1" do
+          before { subject.save! }
+          it "does not generate a SHA1" do
+            expect(subject).not_to receive(:sha1=)
+            subject.generate_sha1
+          end
         end
       end
       describe "when a SHA1 is not provided" do
+        subject { described_class.new(path: path) }
         it "generates a SHA1" do
-          expect_any_instance_of(described_class).to receive(:generate_sha1).and_call_original
-          file = described_class.create!(path: path)
-          file.reload
-          expect(file.sha1).to eq sha1
+          subject.save!
+          subject.reload
+          expect(subject.sha1).to eq sha1
+        end
+        describe "when set_sha1 encounters a file not found error" do
+          it "tracks a deletion" do
+            expect_any_instance_of(described_class).to receive(:set_sha1).and_raise(Errno::ENOENT)
+            subject.save!
+            tracked_change = subject.tracked_changes.last
+            expect(tracked_change).to be_deletion
+          end
+          it "marks the file as MISSING" do
+            expect_any_instance_of(described_class).to receive(:set_sha1).and_raise(Errno::ENOENT)
+            subject.save!
+            subject.reload
+            expect(subject).to be_missing
+          end
         end
       end
     end
@@ -168,6 +192,88 @@ RSpec.describe TrackedFile do
     end
   end
 
+  describe "fixity checking boolean methods" do
+    let(:path) { File.join(fixture_path, "nypl.jpg") }
+    subject { described_class.new(path: path) }
+    describe "fixity_checkable?" do
+      it { is_expected.to_not be_fixity_checkable }
+      describe "new record with a SHA1" do
+        before { subject.sha1 = "37781031df4573b90ef045889b7da0ab2655bf74" }
+        it { is_expected.to_not be_fixity_checkable }
+      end
+      describe "persisted, after SHA1 generation" do
+        before do
+          subject.save!
+          subject.reload
+        end
+        it { is_expected.to be_fixity_checkable }
+      end
+    end
+    describe "fixity_checked?" do
+      it { is_expected.to_not be_fixity_checked }
+      describe "persisted, after SHA1 generation" do
+        before do
+          subject.save!
+          subject.reload
+        end
+        it { is_expected.to_not be_fixity_checked }
+        describe "after a fixity check" do
+          before do
+            subject.check_fixity!
+            subject.reload
+          end
+          it { is_expected.to be_fixity_checked }
+        end
+      end
+    end
+    describe "fixity_check_due?" do
+      it { is_expected.to_not be_fixity_check_due }
+      describe "persisted, after SHA1 generation" do
+        before do
+          subject.save!
+          subject.reload
+        end
+        it { is_expected.to_not be_fixity_check_due }
+        describe "after a fixity check" do
+          before do
+            subject.check_fixity!
+            subject.reload
+          end
+          it { is_expected.to_not be_fixity_check_due }
+          describe "when the last fixity happened before the cutoff date" do
+            before do
+              allow(described_class).to receive(:fixity_check_cutoff_date) { DateTime.now }
+            end
+            it { is_expected.to be_fixity_check_due }
+          end
+        end
+      end
+    end
+    describe "check_fixity?" do
+      its(:check_fixity?) { is_expected.to be false }
+      describe "fixity checkable and not checked" do
+        before do
+          subject.save!
+          subject.reload
+        end
+        its(:check_fixity?) { is_expected.to be true }
+        describe "after a fixity check" do
+          before do
+            subject.check_fixity!
+            subject.reload
+          end
+          its(:check_fixity?) { is_expected.to be false }
+          describe "when the last fixity happened before the cutoff date" do
+            before do
+              allow(described_class).to receive(:fixity_check_cutoff_date) { DateTime.now }
+            end
+            its(:check_fixity?) { is_expected.to be true }
+          end
+        end
+      end
+    end
+  end
+
   describe "validation" do
     let(:file) { Tempfile.create }
     let(:path) { file.path }
@@ -189,19 +295,6 @@ RSpec.describe TrackedFile do
     describe "uniqueness violation" do
       before { described_class.create!(path: path) }
       it { is_expected.to be_invalid }
-    end
-  end
-
-  describe "it sets size before create" do
-    let(:path) { File.join(fixture_path, "nypl.jpg") }
-    subject { described_class.create!(path: path) }
-    its(:size) { is_expected.to eq 410226 }
-
-    describe "unless size is present" do
-      specify {
-        expect_any_instance_of(described_class).not_to receive(:set_size)
-        described_class.create!(path: path, size: 410226)
-      }
     end
   end
 
