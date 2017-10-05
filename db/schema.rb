@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170928214348) do
+ActiveRecord::Schema.define(version: 20171004205555) do
 
   create_table "fixity_checks", force: :cascade do |t|
     t.string "sha1"
@@ -49,6 +49,7 @@ ActiveRecord::Schema.define(version: 20170928214348) do
     t.datetime "tracked_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "title"
   end
 
   create_table "tracked_files", force: :cascade do |t|

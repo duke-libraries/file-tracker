@@ -35,6 +35,12 @@ class TrackedFile < ActiveRecord::Base
 
   def self.track!(*paths)
     paths.each { |path| find_or_initialize_by(path: path).track! }
+    # tracked = where(path: paths).each { |tf| tf.track! }
+    # untracked_paths = paths - tracked.map(&:path)
+    # if untracked_paths.present?
+    #   untracked_paths.map! { |path| {path: path} }
+    #   create!(untracked_paths)
+    # end
   end
 
   def self.under(path)
@@ -72,7 +78,8 @@ class TrackedFile < ActiveRecord::Base
   end
 
   def check_size!
-    if size != (current_size = calculate_size)
+    current_size = calculate_size
+    if size != current_size
       # Don't track the same change twice ...
       TrackedChange.find_or_create_by(tracked_file: self, change_type: FileTracker::Change::MODIFICATION, size: current_size)
       # XXX update fixity_status to MODIFIED ?
