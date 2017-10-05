@@ -2,50 +2,109 @@ require 'rails_helper'
 
 RSpec.describe TrackedFile do
 
-  describe "scopes" do
+  describe "create" do
     let(:path) { File.join(fixture_path, "nypl.jpg") }
+    describe "size calculation" do
+      describe "when size is provided" do
+        it "does not set the size" do
+          expect_any_instance_of(described_class).not_to receive(:set_size)
+          described_class.create!(path: path, size: 410226)
+        end
+      end
+      describe "when size is not provided" do
+        it "sets the size" do
+          expect_any_instance_of(described_class).to receive(:set_size).and_call_original
+          file = described_class.create!(path: path)
+          expect(file.size).to eq 410226
+        end
+      end
+    end
+    describe "SHA1 generation" do
+      let(:sha1) { "37781031df4573b90ef045889b7da0ab2655bf74" }
+      describe "when a SHA1 is provided" do
+        it "does not generate a SHA1" do
+          expect_any_instance_of(described_class).not_to receive(:generate_sha1)
+          described_class.create!(path: path, sha1: sha1)
+        end
+      end
+      describe "when a SHA1 is not provided" do
+        it "generates a SHA1" do
+          expect_any_instance_of(described_class).to receive(:generate_sha1).and_call_original
+          file = described_class.create!(path: path)
+          file.reload
+          expect(file.sha1).to eq sha1
+        end
+      end
+    end
+  end
 
-    describe "not_ok" do
-      specify {
-        file = TrackedFile.create(path: path)
-        expect(TrackedFile.not_ok).not_to include file
-      }
+  describe "class methods" do
+    describe ".track!" do
+      before do
+        @dir = Dir.mktmpdir
+        @file1 = Tempfile.create("file-", @dir)
+        File.open(@file1.path, "wb") { |f| f.write(SecureRandom.gen_random(1000)) }
+        described_class.create(path: @file1.path, size: 1000)
+        @file2 = Tempfile.create("file-", @dir)
+        File.open(@file2.path, "wb") { |f| f.write(SecureRandom.gen_random(2000)) }
+        @file3 = Tempfile.create("file-", @dir)
+        File.open(@file3.path, "wb") { |f| f.write(SecureRandom.gen_random(3000)) }
+      end
+      after { FileUtils.remove_entry_secure(@dir) }
+      it "checks the size of each previously tracked file path" do
+        expect_any_instance_of(described_class).to receive(:check_size!).once
+        described_class.track!(@file1.path, @file2.path, @file3.path)
+      end
+      it "creates tracked files for new paths" do
+        expect { described_class.track!(@file1.path, @file2.path, @file3.path) }.to change(TrackedFile, :count).by(2)
+      end
     end
-    describe "ok" do
-      specify {
-        file = TrackedFile.create(path: path)
-        expect(TrackedFile.ok).not_to include file
-        file.fixity_status = FileTracker::Status::OK
-        file.save!
-        expect(TrackedFile.ok).to include file
-      }
-    end
-    describe "modified" do
-      specify {
-        file = TrackedFile.create(path: path)
-        expect(TrackedFile.modified).not_to include file
-        file.fixity_status = FileTracker::Status::MODIFIED
-        file.save!
-        expect(TrackedFile.modified).to include file
-      }
-    end
-    describe "missing" do
-      specify {
-        file = TrackedFile.create(path: path)
-        expect(TrackedFile.missing).not_to include file
-        file.fixity_status = FileTracker::Status::MISSING
-        file.save!
-        expect(TrackedFile.missing).to include file
-      }
-    end
-    describe "error" do
-      specify {
-        file = TrackedFile.create(path: path)
-        expect(TrackedFile.error).not_to include file
-        file.fixity_status = FileTracker::Status::ERROR
-        file.save!
-        expect(TrackedFile.error).to include file
-      }
+
+    describe "scopes" do
+      let(:path) { File.join(fixture_path, "nypl.jpg") }
+
+      describe "not_ok" do
+        specify {
+          file = TrackedFile.create(path: path)
+          expect(TrackedFile.not_ok).not_to include file
+        }
+      end
+      describe "ok" do
+        specify {
+          file = TrackedFile.create(path: path)
+          expect(TrackedFile.ok).not_to include file
+          file.fixity_status = FileTracker::Status::OK
+          file.save!
+          expect(TrackedFile.ok).to include file
+        }
+      end
+      describe "modified" do
+        specify {
+          file = TrackedFile.create(path: path)
+          expect(TrackedFile.modified).not_to include file
+          file.fixity_status = FileTracker::Status::MODIFIED
+          file.save!
+          expect(TrackedFile.modified).to include file
+        }
+      end
+      describe "missing" do
+        specify {
+          file = TrackedFile.create(path: path)
+          expect(TrackedFile.missing).not_to include file
+          file.fixity_status = FileTracker::Status::MISSING
+          file.save!
+          expect(TrackedFile.missing).to include file
+        }
+      end
+      describe "error" do
+        specify {
+          file = TrackedFile.create(path: path)
+          expect(TrackedFile.error).not_to include file
+          file.fixity_status = FileTracker::Status::ERROR
+          file.save!
+          expect(TrackedFile.error).to include file
+        }
+      end
     end
   end
 
@@ -144,14 +203,6 @@ RSpec.describe TrackedFile do
         described_class.create!(path: path, size: 410226)
       }
     end
-  end
-
-  describe "it generates a SHA1 after create" do
-    let(:path) { File.join(fixture_path, "nypl.jpg") }
-    let(:sha1) { "37781031df4573b90ef045889b7da0ab2655bf74" }
-    before { subject.reload }
-    subject { described_class.create!(path: path) }
-    its(:sha1) { is_expected.to eq sha1 }
   end
 
   describe "track!" do
