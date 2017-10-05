@@ -11,19 +11,8 @@ class BatchFixityCheck
   end
 
   def call
-    count = queue(not_checked.limit(max))
-    if count < max
-      count += queue(check_due.limit(max - count))
-    end
-    count
-  end
-
-  def not_checked
-    TrackedFile.fixity_not_checked.order(created_at: :asc)
-  end
-
-  def check_due
-    TrackedFile.fixity_check_due.order(fixity_checked_at: :asc)
+    tracked_files = TrackedFile.check_fixity?.order(fixity_checked_at: :asc, created_at: :asc)
+    queue(tracked_files)
   end
 
   def queue(tracked_files)

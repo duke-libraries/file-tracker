@@ -12,8 +12,8 @@ class TrackedChange < ActiveRecord::Base
   validates_inclusion_of :change_type, in: FileTracker::Change::Type.values
   validates_inclusion_of :change_status, in: FileTracker::Change::Status.values, allow_nil: true
 
-  before_validation :set_discovered_at, unless: :discovered_at
-  before_create :set_size, unless: :size, if: :modification?
+  before_validation :set_discovered_at, unless: :discovered_at?
+  before_create :set_size, unless: :size?, if: :modification?
 
   scope :pending, ->{ where(change_status: nil) }
 
@@ -32,6 +32,8 @@ class TrackedChange < ActiveRecord::Base
 
   %w( modification deletion ).each do |type|
     value = const_get(type.upcase)
+
+    scope type, ->{ where(change_type: value) }
 
     define_method "#{type}?" do
       change_type == value
