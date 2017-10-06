@@ -12,11 +12,7 @@ class FixityJob < ApplicationJob
   end
 
   queue_as do
-    if large_file?(tracked_file.path)
-      large_file_queue
-    else
-      base_queue
-    end
+    tracked_file.large? ? large_file_queue : base_queue
   end
 
   def tracked_file

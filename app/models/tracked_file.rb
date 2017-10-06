@@ -12,12 +12,9 @@ class TrackedFile < ActiveRecord::Base
   before_create :set_size, unless: :size?
   after_create :generate_sha1, unless: :sha1?
 
-  # scope :fixity_checkable, ->{ where.not(sha1: nil) }
   scope :fixity_status, ->(v) { where(fixity_status: v) }
   scope :not_ok, ->{ where("fixity_status > ?", FileTracker::Status::OK) }
-  # scope :fixity_not_checked, ->{ where(fixity_checked_at: nil) }
-  # scope :fixity_checked, -> { where.not(fixity_checked_at: nil) }
-  # scope :fixity_check_due, ->{ where("fixity_checked_at < ?", fixity_check_cutoff_date) }
+  scope :large, ->{ where("size >= ?", FileTracker.large_file_threshhold) }
 
   FileTracker::Status.keys.each do |key|
     scope key, ->{ fixity_status FileTracker::Status.send(key) }
@@ -54,6 +51,10 @@ class TrackedFile < ActiveRecord::Base
 
   def to_s
     path
+  end
+
+  def large?
+    size? && size >= FileTracker.large_file_threshhold
   end
 
   def fixity_check_due?
