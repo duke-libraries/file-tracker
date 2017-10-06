@@ -134,30 +134,30 @@ RSpec.describe TrackedFile do
     end
   end
 
-  describe "fixity status value methods" do
+  describe "status value methods" do
     subject { described_class.new(path: path) }
     let(:path) { File.join(fixture_path, "nypl.jpg") }
-    describe "when fixity status is OK" do
+    describe "when status is OK" do
       it { is_expected.to be_ok }
       it { is_expected.to_not be_modified }
       it { is_expected.to_not be_missing }
       it { is_expected.to_not be_error }
     end
-    describe "when fixity status is MODIFIED" do
+    describe "when status is MODIFIED" do
       before { subject.status = FileTracker::Status::MODIFIED }
       it { is_expected.to_not be_ok }
       it { is_expected.to be_modified }
       it { is_expected.to_not be_missing }
       it { is_expected.to_not be_error }
     end
-    describe "when fixity status is MISSING" do
+    describe "when status is MISSING" do
       before { subject.status = FileTracker::Status::MISSING }
       it { is_expected.to_not be_ok }
       it { is_expected.to_not be_modified }
       it { is_expected.to be_missing }
       it { is_expected.to_not be_error }
     end
-    describe "when fixity status is ERROR" do
+    describe "when status is ERROR" do
       before { subject.status = FileTracker::Status::ERROR }
       it { is_expected.to_not be_ok }
       it { is_expected.to_not be_modified }
@@ -319,20 +319,19 @@ RSpec.describe TrackedFile do
         end
       end
       describe "when the file size has changed" do
-        describe "and the fixity status is MODIFIED" do
+        describe "and the status is MODIFIED" do
           before { subject.modified! }
           it "does nothing" do
             expect { subject.track! }.not_to change { subject.tracked_changes.count }
           end
         end
-        describe "and the fixity status is MISSING" do
+        describe "and the status is MISSING" do
           before { subject.missing! }
           it "does nothing" do
             expect { subject.track! }.not_to change { subject.tracked_changes.count }
           end
         end
-        describe "and the fixity status is OK" do
-          before { subject.ok! }
+        describe "and the status is OK" do
           it "tracks the change" do
             allow(subject).to receive(:calculate_size) { 410225 }
             subject.track!
@@ -340,26 +339,20 @@ RSpec.describe TrackedFile do
             expect(tracked_change).to be_modification
           end
         end
-        describe "and the fixity status is ERROR" do
+        describe "and the status is ERROR" do
           before { subject.error! }
           it "does nothing" do
             expect { subject.track! }.not_to change { subject.tracked_changes.count }
           end
         end
-        describe "and the fixity status is nil" do
-          it "tracks the change" do
-            allow(subject).to receive(:calculate_size) { 410225 }
-            subject.track!
-            tracked_change = subject.tracked_changes.last
-            expect(tracked_change).to be_modification
-          end
-        end
-      end
+      end # file size has changed
       describe "when the file is missing" do
-        # TODO
-      end
-      describe "when there is a permissions error" do
-        # TODO
+        it "tracks a deletion" do
+          allow(File).to receive(:size).with(path).and_raise(Errno::ENOENT)
+          subject.track!
+          tracked_change = subject.tracked_changes.last
+          expect(tracked_change).to be_deletion
+        end
       end
     end # existing record
   end # track!

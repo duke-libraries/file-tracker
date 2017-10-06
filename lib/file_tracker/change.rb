@@ -9,6 +9,7 @@ module FileTracker
     end
 
     module Status
+      PENDING  = -1
       ACCEPTED = 0
       REJECTED = 1
 

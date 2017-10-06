@@ -1,4 +1,4 @@
-module FixityCheckResultAdmin
+module FixityCheckAdmin
   extend ActiveSupport::Concern
 
   included do
@@ -6,6 +6,7 @@ module FixityCheckResultAdmin
       object_label_method { :path }
 
       list do
+        scopes [nil, :ok, :not_ok, :modified, :missing, :error]
         field :path
         field :status, :status do
           pretty_status

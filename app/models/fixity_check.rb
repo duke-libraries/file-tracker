@@ -1,9 +1,8 @@
 class FixityCheck < ActiveRecord::Base
 
-  # include FileTracker::Status
   include HasFixity
   include HasStatus
-  include FixityCheckResultAdmin
+  include FixityCheckAdmin
 
   belongs_to :tracked_file
 
