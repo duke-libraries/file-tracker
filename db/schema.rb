@@ -10,13 +10,13 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171006013525) do
+ActiveRecord::Schema.define(version: 20171006134124) do
 
   create_table "fixity_checks", force: :cascade do |t|
     t.string "sha1"
     t.string "md5"
     t.integer "size", limit: 8
-    t.integer "status", null: false
+    t.integer "status", limit: 1, null: false
     t.text "message"
     t.datetime "started_at", null: false
     t.datetime "finished_at", null: false
@@ -31,8 +31,8 @@ ActiveRecord::Schema.define(version: 20171006013525) do
     t.string "sha1"
     t.integer "size", limit: 8
     t.datetime "discovered_at", null: false
-    t.integer "change_type", null: false
-    t.integer "change_status"
+    t.integer "change_type", limit: 1, null: false
+    t.integer "change_status", limit: 1, default: -1, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "tracked_file_id"

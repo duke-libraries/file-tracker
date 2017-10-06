@@ -6,6 +6,7 @@ module TrackedFileAdmin
       object_label_method { :path }
 
       list do
+        scopes [nil, :ok, :not_ok, :modified, :missing, :error]
         field :path
         field :created_at do
           date_format :short

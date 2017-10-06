@@ -66,12 +66,7 @@ class TrackedFile < ActiveRecord::Base
   def set_sha1!
     super
   rescue Errno::ENOENT => e
-    raise if new_record?
-    missing!
-    save if changed?
-    TrackedChange.find_or_create_by(tracked_file: self,
-                                    change_type: FileTracker::Change::DELETION,
-                                    change_status: nil)
+    track_deletion(e)
   end
 
   def check_fixity?
@@ -100,9 +95,20 @@ class TrackedFile < ActiveRecord::Base
       modified!
       save if changed?
       TrackedChange.find_or_create_by(tracked_file: self,
-                                      change_type: FileTracker::Change::MODIFICATION,
+                                      change_type: TrackedChange::MODIFICATION,
                                       size: current_size)
     end
+  rescue Errno::ENOENT => e
+    track_deletion(e)
+  end
+
+  def track_deletion(exception)
+    raise exception if new_record?
+    missing!
+    save if changed?
+    TrackedChange.find_or_create_by(tracked_file: self,
+                                    change_type: TrackedChange::DELETION,
+                                    change_status: TrackedChange::PENDING)
   end
 
 end

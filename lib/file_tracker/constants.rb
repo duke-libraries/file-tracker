@@ -11,10 +11,10 @@ module FileTracker
 
     def self.extended(base)
       base.module_eval do
-        constants(false).each do |c|
-          define_singleton_method c.to_s.downcase do
-            const_get(c)
-          end
+        # creates a class method in the extended module
+        # for each constant key.
+        each do |key, value|
+          define_singleton_method(key) { value }
         end
       end
     end
