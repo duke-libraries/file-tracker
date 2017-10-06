@@ -10,7 +10,7 @@ module TrackedFileAdmin
         field :created_at do
           date_format :short
         end
-        field :fixity_status, :status do
+        field :status, :status do
           pretty_status
         end
       end
@@ -21,7 +21,7 @@ module TrackedFileAdmin
         field :created_at do
           date_format :long
         end
-        field :fixity_status, :status do
+        field :status, :status do
           pretty_status
         end
         field :fixity_checked_at do

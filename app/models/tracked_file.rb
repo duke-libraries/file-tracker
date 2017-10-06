@@ -7,26 +7,26 @@ class TrackedFile < ActiveRecord::Base
   has_many :tracked_changes, dependent: :destroy
 
   validates :path, file_exists: true, readable: true, uniqueness: true
-  validates_inclusion_of :fixity_status, in: FileTracker::Status.values, allow_nil: true
+  validates_inclusion_of :status, in: FileTracker::Status.values, allow_nil: true
 
   before_create :set_size, unless: :size?
   after_create :generate_sha1, unless: :sha1?
 
-  scope :fixity_status, ->(v) { where(fixity_status: v) }
-  scope :not_ok, ->{ where("fixity_status > ?", FileTracker::Status::OK) }
+  scope :status, ->(v) { where(status: v) }
+  scope :not_ok, ->{ where("status > ?", FileTracker::Status::OK) }
   scope :large, ->{ where("size >= ?", FileTracker.large_file_threshhold) }
 
   FileTracker::Status.keys.each do |key|
-    scope key, ->{ fixity_status FileTracker::Status.send(key) }
+    scope key, ->{ status FileTracker::Status.send(key) }
 
     value = FileTracker::Status.send(key)
 
     define_method "#{key}?" do
-      fixity_status == value
+      status == value
     end
 
     define_method "#{key}!" do
-      self.fixity_status = value
+      self.status = value
     end
   end
 
@@ -104,7 +104,7 @@ class TrackedFile < ActiveRecord::Base
   def track!
     if new_record?
       save!
-    elsif ok? || fixity_status.nil?
+    elsif ok? || status.nil?
       check_size!
     end
   end

@@ -85,7 +85,7 @@ class FixityCheck < ActiveRecord::Base
   private
 
   def update_tracked_file
-    tracked_file.update(fixity_checked_at: started_at, fixity_status: status)
+    tracked_file.update(fixity_checked_at: started_at, status: status)
   end
 
   def track_change?

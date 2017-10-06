@@ -97,7 +97,7 @@ RSpec.describe TrackedFile do
         specify {
           file = TrackedFile.create(path: path)
           expect(TrackedFile.ok).not_to include file
-          file.fixity_status = FileTracker::Status::OK
+          file.status = FileTracker::Status::OK
           file.save!
           expect(TrackedFile.ok).to include file
         }
@@ -106,7 +106,7 @@ RSpec.describe TrackedFile do
         specify {
           file = TrackedFile.create(path: path)
           expect(TrackedFile.modified).not_to include file
-          file.fixity_status = FileTracker::Status::MODIFIED
+          file.status = FileTracker::Status::MODIFIED
           file.save!
           expect(TrackedFile.modified).to include file
         }
@@ -115,7 +115,7 @@ RSpec.describe TrackedFile do
         specify {
           file = TrackedFile.create(path: path)
           expect(TrackedFile.missing).not_to include file
-          file.fixity_status = FileTracker::Status::MISSING
+          file.status = FileTracker::Status::MISSING
           file.save!
           expect(TrackedFile.missing).to include file
         }
@@ -124,7 +124,7 @@ RSpec.describe TrackedFile do
         specify {
           file = TrackedFile.create(path: path)
           expect(TrackedFile.error).not_to include file
-          file.fixity_status = FileTracker::Status::ERROR
+          file.status = FileTracker::Status::ERROR
           file.save!
           expect(TrackedFile.error).to include file
         }
@@ -143,28 +143,28 @@ RSpec.describe TrackedFile do
       it { is_expected.to_not be_error }
     end
     describe "when fixity status is OK" do
-      before { subject.fixity_status = FileTracker::Status::OK }
+      before { subject.status = FileTracker::Status::OK }
       it { is_expected.to be_ok }
       it { is_expected.to_not be_modified }
       it { is_expected.to_not be_missing }
       it { is_expected.to_not be_error }
     end
     describe "when fixity status is MODIFIED" do
-      before { subject.fixity_status = FileTracker::Status::MODIFIED }
+      before { subject.status = FileTracker::Status::MODIFIED }
       it { is_expected.to_not be_ok }
       it { is_expected.to be_modified }
       it { is_expected.to_not be_missing }
       it { is_expected.to_not be_error }
     end
     describe "when fixity status is MISSING" do
-      before { subject.fixity_status = FileTracker::Status::MISSING }
+      before { subject.status = FileTracker::Status::MISSING }
       it { is_expected.to_not be_ok }
       it { is_expected.to_not be_modified }
       it { is_expected.to be_missing }
       it { is_expected.to_not be_error }
     end
     describe "when fixity status is ERROR" do
-      before { subject.fixity_status = FileTracker::Status::ERROR }
+      before { subject.status = FileTracker::Status::ERROR }
       it { is_expected.to_not be_ok }
       it { is_expected.to_not be_modified }
       it { is_expected.to_not be_missing }
@@ -172,22 +172,22 @@ RSpec.describe TrackedFile do
     end
     describe "ok!" do
       specify {
-        expect { subject.ok! }.to change(subject, :fixity_status).to(FileTracker::Status::OK)
+        expect { subject.ok! }.to change(subject, :status).to(FileTracker::Status::OK)
       }
     end
     describe "modified!" do
       specify {
-        expect { subject.modified! }.to change(subject, :fixity_status).to(FileTracker::Status::MODIFIED)
+        expect { subject.modified! }.to change(subject, :status).to(FileTracker::Status::MODIFIED)
       }
     end
     describe "missing!" do
       specify {
-        expect { subject.missing! }.to change(subject, :fixity_status).to(FileTracker::Status::MISSING)
+        expect { subject.missing! }.to change(subject, :status).to(FileTracker::Status::MISSING)
       }
     end
     describe "error!" do
       specify {
-        expect { subject.error! }.to change(subject, :fixity_status).to(FileTracker::Status::ERROR)
+        expect { subject.error! }.to change(subject, :status).to(FileTracker::Status::ERROR)
       }
     end
   end
@@ -409,8 +409,8 @@ RSpec.describe TrackedFile do
         subject
         File.unlink(path)
       end
-      it "sets the fixity_status to MISSING" do
-        expect { subject.check_fixity! }.to change(subject, :fixity_status).to(FileTracker::Status::MISSING)
+      it "sets the status to MISSING" do
+        expect { subject.check_fixity! }.to change(subject, :status).to(FileTracker::Status::MISSING)
       end
       describe "tracking the deletion" do
         specify {
