@@ -59,7 +59,7 @@ class TrackedChange < ActiveRecord::Base
   private
 
   def accept_modification
-    tracked_file.update(sha1: sha1, size: size, md5: nil, fixity_status: FileTracker::Status::OK)
+    tracked_file.update(sha1: sha1, size: size, md5: nil, status: FileTracker::Status::OK)
     accepted!
     save!
   end

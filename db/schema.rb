@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171004205555) do
+ActiveRecord::Schema.define(version: 20171006013120) do
 
   create_table "fixity_checks", force: :cascade do |t|
     t.string "sha1"
@@ -58,14 +58,14 @@ ActiveRecord::Schema.define(version: 20171004205555) do
     t.string "md5"
     t.integer "size", limit: 8
     t.datetime "fixity_checked_at"
-    t.integer "fixity_status"
+    t.integer "status"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["created_at"], name: "index_tracked_files_on_created_at"
     t.index ["fixity_checked_at"], name: "index_tracked_files_on_fixity_checked_at"
-    t.index ["fixity_status"], name: "index_tracked_files_on_fixity_status"
     t.index ["path"], name: "index_tracked_files_on_path"
     t.index ["size"], name: "index_tracked_files_on_size"
+    t.index ["status"], name: "index_tracked_files_on_status"
     t.index ["updated_at"], name: "index_tracked_files_on_updated_at"
   end
 

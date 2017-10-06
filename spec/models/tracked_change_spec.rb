@@ -27,8 +27,8 @@ RSpec.describe TrackedChange do
         it "does not change the fixity check time of the tracked file" do
           expect { subject.accept! }.not_to change(tracked_file, :fixity_checked_at)
         end
-        it "changes the fixity_status of the tracked file" do
-          expect { subject.accept! }.to change(tracked_file, :fixity_status).to(FileTracker::Status::OK)
+        it "changes the status of the tracked file" do
+          expect { subject.accept! }.to change(tracked_file, :status).to(FileTracker::Status::OK)
         end
         it "marks the change as accepted" do
           expect { subject.accept! }.to change(subject, :change_status).from(nil).to(described_class::ACCEPTED)
@@ -54,8 +54,8 @@ RSpec.describe TrackedChange do
         it "does not change the fixity check time of the tracked file" do
           expect { subject.accept! }.not_to change(tracked_file, :fixity_checked_at)
         end
-        it "changes the fixity_status of the tracked file" do
-          expect { subject.accept! }.to change(tracked_file, :fixity_status).to(FileTracker::Status::OK)
+        it "changes the status of the tracked file" do
+          expect { subject.accept! }.to change(tracked_file, :status).to(FileTracker::Status::OK)
         end
         it "marks the change as accepted" do
           expect { subject.accept! }.to change(subject, :change_status).from(nil).to(described_class::ACCEPTED)

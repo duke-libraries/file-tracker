@@ -42,7 +42,7 @@ module RailsAdmin::Config::Fields::Types
 
   class Status < Integer
     register_instance_option :pretty_status do
-      pretty_value { I18n.t("file_tracker.status.#{value || 'not_checked'}") }
+      pretty_value { I18n.t("file_tracker.status.#{value}") }
     end
   end
 
