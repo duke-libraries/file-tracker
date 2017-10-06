@@ -64,23 +64,23 @@ RSpec.describe TrackedFile do
 
   describe "class methods" do
     describe ".track!" do
+      let(:dir) { Dir.mktmpdir }
+      let(:path1) { Tempfile.create("file-", dir).path }
+      let(:path2) { Tempfile.create("file-", dir).path }
+      let(:path3) { Tempfile.create("file-", dir).path }
       before do
-        @dir = Dir.mktmpdir
-        @file1 = Tempfile.create("file-", @dir)
-        File.open(@file1.path, "wb") { |f| f.write(SecureRandom.gen_random(1000)) }
-        described_class.create(path: @file1.path, size: 1000)
-        @file2 = Tempfile.create("file-", @dir)
-        File.open(@file2.path, "wb") { |f| f.write(SecureRandom.gen_random(2000)) }
-        @file3 = Tempfile.create("file-", @dir)
-        File.open(@file3.path, "wb") { |f| f.write(SecureRandom.gen_random(3000)) }
+        File.open(path1, "wb") { |f| f.write(SecureRandom.gen_random(1000)) }
+        described_class.create(path: path1, size: 1000)
+        File.open(path2, "wb") { |f| f.write(SecureRandom.gen_random(2000)) }
+        File.open(path3, "wb") { |f| f.write(SecureRandom.gen_random(3000)) }
       end
-      after { FileUtils.remove_entry_secure(@dir) }
+      after { FileUtils.remove_entry_secure(dir) }
       it "checks the size of each previously tracked file path" do
         expect_any_instance_of(described_class).to receive(:check_size!).once
-        described_class.track!(@file1.path, @file2.path, @file3.path)
+        described_class.track!(path1, path2, path3)
       end
       it "creates tracked files for new paths" do
-        expect { described_class.track!(@file1.path, @file2.path, @file3.path) }.to change(TrackedFile, :count).by(2)
+        expect { described_class.track!(path1, path2, path3) }.to change(TrackedFile, :count).by(2)
       end
     end
 
@@ -383,7 +383,6 @@ RSpec.describe TrackedFile do
           }
         end
       end
-
       describe "when sha1 has changed" do
         before do
           allow_any_instance_of(FixityCheck).to receive(:calculate_sha1) { "37781031df4573b90ef045889b7da0ab2655bf75" }
@@ -400,7 +399,6 @@ RSpec.describe TrackedFile do
         end
       end
     end
-
     describe "when missing" do
       let(:file) { Tempfile.create }
       let(:path) { file.path }
@@ -424,7 +422,6 @@ RSpec.describe TrackedFile do
         }
       end
     end
-
     describe "when file is not readable" do
       let(:file) { Tempfile.create }
       let(:path) { file.path }
@@ -443,7 +440,37 @@ RSpec.describe TrackedFile do
         expect { subject.check_fixity! }.not_to change(subject.tracked_changes, :count)
       end
     end
+  end
 
+  describe "#large?" do
+    before do
+      allow(FileTracker.configuration).to receive(:large_file_threshhold) { 200 }
+    end
+    describe "when size is nil" do
+      let(:path) { File.join(fixture_path, "nypl.jpg") }
+      subject { described_class.new(path: path) }
+      it { is_expected.to_not be_large }
+    end
+    describe "when size is not nil" do
+      let(:path) { Tempfile.create.path }
+      subject { described_class.new(path: path, size: size) }
+      before do
+        File.open(path, "wb") { |f| f.write(SecureRandom.gen_random(size)) }
+      end
+      after { File.unlink(path) }
+      describe "when size < large file threshhold" do
+        let(:size) { 100 }
+        it { is_expected.to_not be_large }
+      end
+      describe "when size == large file threshhold" do
+        let(:size) { 200 }
+        it { is_expected.to be_large }
+      end
+      describe "when size > large file threshhold" do
+        let(:size) { 300 }
+        it { is_expected.to be_large }
+      end
+    end
   end
 
 end
