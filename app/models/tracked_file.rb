@@ -16,8 +16,8 @@ class TrackedFile < ActiveRecord::Base
   scope :large, ->{ where("size >= ?", FileTracker.large_file_threshhold) }
 
   def self.check_fixity?
-    where("sha1 IS NOT NULL AND (fixity_checked_at IS NULL OR fixity_checked_at < ?)",
-          fixity_check_cutoff_date)
+    ok.where("sha1 IS NOT NULL AND (fixity_checked_at IS NULL OR fixity_checked_at < ?)",
+             fixity_check_cutoff_date)
   end
 
   def self.track!(*paths)
@@ -48,7 +48,7 @@ class TrackedFile < ActiveRecord::Base
   end
 
   def fixity_checkable?
-    persisted? && sha1?
+    persisted? && sha1? && ok?
   end
 
   def fixity_checked?
