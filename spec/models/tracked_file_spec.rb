@@ -202,6 +202,13 @@ RSpec.describe TrackedFile do
           subject.reload
         end
         it { is_expected.to be_fixity_checkable }
+        describe "and status is not OK" do
+          before do
+            subject.modified!
+            subject.save!
+          end
+          it { is_expected.to_not be_fixity_checkable }
+        end
       end
     end
     describe "fixity_checked?" do
@@ -252,6 +259,13 @@ RSpec.describe TrackedFile do
           subject.reload
         end
         its(:check_fixity?) { is_expected.to be true }
+        describe "and status is not OK" do
+          before do
+            subject.modified!
+            subject.save!
+          end
+          its(:check_fixity?) { is_expected.to be false }
+        end
         describe "after a fixity check" do
           before do
             subject.check_fixity!
