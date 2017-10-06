@@ -273,20 +273,16 @@ RSpec.describe TrackedFile do
     let(:file) { Tempfile.create }
     let(:path) { file.path }
     after { File.unlink(path) if File.exist?(path) }
-
     subject { described_class.new(path: path) }
     it { is_expected.to be_valid }
-
     describe "existence violation" do
       before { File.unlink(path) }
       it { is_expected.to be_invalid }
     end
-
     describe "readable violation" do
       before { FileUtils.chmod "u-r", path }
       it { is_expected.to be_invalid }
     end
-
     describe "uniqueness violation" do
       before { described_class.create!(path: path) }
       it { is_expected.to be_invalid }

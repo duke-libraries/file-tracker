@@ -1,3 +1,5 @@
+require 'digest'
+
 module HasFixity
 
   def set_sha1
