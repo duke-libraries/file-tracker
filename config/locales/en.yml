@@ -45,9 +45,9 @@ en:
         :1: MODIFICATION
         :2: DELETION
       status:
+        :-1: PENDING
         :0: ACCEPTED
         :1: REJECTED
-        pending: PENDING
   time:
     formats:
       short: "%F"
