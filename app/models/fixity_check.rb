@@ -64,7 +64,9 @@ class FixityCheck < ActiveRecord::Base
     set_size
     unless size == tracked_file.size
       raise FileTracker::ModifiedFileError,
-            "Expected size: #{tracked_file.size}; actual size: #{size}"
+            I18n.t("file_tracker.error.modification.size",
+                   expected: tracked_file.size,
+                   actual: size)
     end
   end
 
@@ -72,7 +74,9 @@ class FixityCheck < ActiveRecord::Base
     set_sha1
     unless sha1 == tracked_file.sha1
       raise FileTracker::ModifiedFileError,
-            "Expected SHA1 {#{tracked_file.sha1}}; actual SHA1 {#{sha1}}"
+            I18n.t("file_tracker.error.modification.sha1",
+                   expected: tracked_file.sha1,
+                   actual: sha1)
     end
   end
 
@@ -87,11 +91,16 @@ class FixityCheck < ActiveRecord::Base
   end
 
   def track_change
-    TrackedChange.create(tracked_file: tracked_file,
-                         change_type: status,
-                         size: size,
-                         sha1: sha1,
-                         discovered_at: started_at)
+    # We probably aren't concerned about creating duplicate changes
+    # because, under normal operation, a fixity check would not be
+    # execute on a file having a pending change (i.e., not
+    # current OK).
+    TrackedChange.create!(tracked_file: tracked_file,
+                          change_type: status,
+                          size: size,
+                          sha1: sha1,
+                          discovered_at: started_at,
+                          message: message)
   end
 
 end

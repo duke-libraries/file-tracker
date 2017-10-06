@@ -31,12 +31,21 @@ class TrackedChange < ActiveRecord::Base
   FileTracker::Change::Type.each do |key, value|
     scope key, ->{ where(change_type: value) }
 
+    define_singleton_method "create_#{key}" do |arg|
+      create(arg.merge(change_type: value))
+    end
+
+    define_singleton_method "create_#{key}!" do |arg|
+      create!(arg.merge(change_type: value))
+    end
+
     define_method "#{key}?" do
       change_type == value
     end
 
-    define_method "#{key}!" do
+    define_method "#{key}!" do |message = nil|
       self.change_type = value
+      self.message = message if message
     end
   end
 

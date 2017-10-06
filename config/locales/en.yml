@@ -35,11 +35,6 @@ en:
     md5: MD5
     sha1: SHA1
   file_tracker:
-    status:
-      :0: OK
-      :1: MODIFIED
-      :2: MISSING
-      :3: ERROR
     change:
       type:
         :1: MODIFICATION
@@ -48,6 +43,15 @@ en:
         :-1: PENDING
         :0: ACCEPTED
         :1: REJECTED
+    error:
+      modification:
+        size: "Expected size: %{expected}; actual size: %{actual}"
+        sha1: "Expected SHA1 {%{expected}}; actual SHA1 {%{actual}}"      
+    status:
+      :0: OK
+      :1: MODIFIED
+      :2: MISSING
+      :3: ERROR
   time:
     formats:
       short: "%F"
