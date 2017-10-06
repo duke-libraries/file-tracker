@@ -26,6 +26,9 @@ RailsAdmin.config do |config|
   config.navigation_static_links = {
     'Queues' => '/queues',
   }
+
+  # Include empty fields on show views
+  config.compact_show_view = false
 end
 
 #
