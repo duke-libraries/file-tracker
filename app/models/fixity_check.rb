@@ -1,8 +1,8 @@
 class FixityCheck < ActiveRecord::Base
 
-  include FileTracker::Status
   include HasFixity
-  include FixityCheckResultAdmin
+  include HasStatus
+  include FixityCheckAdmin
 
   belongs_to :tracked_file
 
@@ -20,15 +20,9 @@ class FixityCheck < ActiveRecord::Base
     end
   end
 
-  %w( ok modified missing error ).each do |stat|
-    value = FileTracker::Status.send(stat)
-
-    define_method "#{stat}?" do
-      status == value
-    end
-
-    define_method "#{stat}!" do |message = nil|
-      self.status = value
+  FileTracker::Status.each do |key, value|
+    define_method "#{key}!" do |message = nil|
+      super()
       self.message = message if message
     end
   end
@@ -85,7 +79,7 @@ class FixityCheck < ActiveRecord::Base
   private
 
   def update_tracked_file
-    tracked_file.update(fixity_checked_at: started_at, fixity_status: status)
+    tracked_file.update(fixity_checked_at: started_at, status: status)
   end
 
   def track_change?

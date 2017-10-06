@@ -26,7 +26,6 @@ en:
       tracked_file:
         created_at: Added
         fixity_checked_at: Fixity Checked
-        fixity_status: Fixity Status
       fixity_check_result:
         checked_at: Checked At
         started_at: Started
@@ -41,7 +40,6 @@ en:
       :1: MODIFIED
       :2: MISSING
       :3: ERROR
-      not_checked: NOT CHECKED
     change:
       type:
         :1: MODIFICATION

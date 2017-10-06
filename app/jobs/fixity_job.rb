@@ -7,17 +7,16 @@ class FixityJob < ApplicationJob
     [ base_queue, large_file_queue ]
   end
 
-  def self.queued
+  def self.enqueued_count
     queues.map { |q| QueueManager.queue_size(q) }.reduce(:+)
   end
 
   queue_as do
-    tracked_file = self.arguments.first
-    if large_file?(tracked_file.path)
-      large_file_queue
-    else
-      base_queue
-    end
+    tracked_file.large? ? large_file_queue : base_queue
+  end
+
+  def tracked_file
+    arguments.first
   end
 
 end

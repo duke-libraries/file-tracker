@@ -10,12 +10,10 @@ class TrackedChange < ActiveRecord::Base
 
   validates_presence_of :tracked_file, :discovered_at
   validates_inclusion_of :change_type, in: FileTracker::Change::Type.values
-  validates_inclusion_of :change_status, in: FileTracker::Change::Status.values, allow_nil: true
+  validates_inclusion_of :change_status, in: FileTracker::Change::Status.values
 
-  before_validation :set_discovered_at, unless: :discovered_at
-  before_create :set_size, unless: :size, if: :modification?
-
-  scope :pending, ->{ where(change_status: nil) }
+  before_validation :set_discovered_at, unless: :discovered_at?
+  before_create :set_size, unless: :size?, if: :modification?
 
   def accept!
     if modification?
@@ -30,26 +28,26 @@ class TrackedChange < ActiveRecord::Base
     save!
   end
 
-  %w( modification deletion ).each do |type|
-    value = const_get(type.upcase)
+  FileTracker::Change::Type.each do |key, value|
+    scope key, ->{ where(change_type: value) }
 
-    define_method "#{type}?" do
+    define_method "#{key}?" do
       change_type == value
     end
 
-    define_method "#{type}!" do
+    define_method "#{key}!" do
       self.change_type = value
     end
   end
 
-  %w( accepted rejected ).each do |status|
-    value = const_get(status.upcase)
+  FileTracker::Change::Status.each do |key, value|
+    scope key, ->{ where(change_status: value) }
 
-    define_method "#{status}?" do
+    define_method "#{key}?" do
       change_status == value
     end
 
-    define_method "#{status}!" do
+    define_method "#{key}!" do
       self.change_status = value
     end
   end
@@ -57,7 +55,7 @@ class TrackedChange < ActiveRecord::Base
   private
 
   def accept_modification
-    tracked_file.update(sha1: sha1, size: size, md5: nil, fixity_status: FileTracker::Status::OK)
+    tracked_file.update(sha1: sha1, size: size, md5: nil, status: FileTracker::Status::OK)
     accepted!
     save!
   end

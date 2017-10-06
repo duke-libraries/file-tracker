@@ -1,30 +1,27 @@
 class TrackedFile < ActiveRecord::Base
 
   include HasFixity
+  include HasStatus
   include TrackedFileAdmin
 
   has_many :fixity_checks, dependent: :destroy
   has_many :tracked_changes, dependent: :destroy
 
   validates :path, file_exists: true, readable: true, uniqueness: true
-  validates_inclusion_of :fixity_status, in: FileTracker::Status.values, allow_nil: true
+  validates_inclusion_of :status, in: FileTracker::Status.values
 
-  before_create :set_size, unless: :size
-  after_create :generate_sha1, unless: :sha1
+  before_create :set_size, unless: :size?
+  after_create :generate_sha1, unless: :sha1?
 
-  scope :fixity_checkable, ->{ where.not(sha1: nil) }
-  scope :fixity_status, ->(v) { where(fixity_status: v) }
-  scope :not_ok, ->{ where("fixity_status > 0") }
-  scope :fixity_not_checked, ->{ fixity_checkable.where(fixity_checked_at: nil) }
-  scope :fixity_checked, -> { where.not(fixity_checked_at: nil) }
-  scope :fixity_check_due, ->{ where("fixity_checked_at < ?", fixity_check_cutoff_date) }
+  scope :large, ->{ where("size >= ?", FileTracker.large_file_threshhold) }
 
-  %i( ok modified missing error ).each do |status|
-    scope status, ->{ fixity_status FileTracker::Status.send(status) }
+  def self.check_fixity?
+    ok.where("sha1 IS NOT NULL AND (fixity_checked_at IS NULL OR fixity_checked_at < ?)",
+             fixity_check_cutoff_date)
   end
 
   def self.track!(*paths)
-    paths.each { |path| find_or_create_by!(path: path) }
+    paths.each { |path| find_or_initialize_by(path: path).track! }
   end
 
   def self.under(path)
@@ -41,6 +38,23 @@ class TrackedFile < ActiveRecord::Base
     path
   end
 
+  def large?
+    size? && size >= FileTracker.large_file_threshhold
+  end
+
+  def fixity_check_due?
+    fixity_checked? &&
+      fixity_checked_at < self.class.fixity_check_cutoff_date
+  end
+
+  def fixity_checkable?
+    persisted? && sha1? && ok?
+  end
+
+  def fixity_checked?
+    fixity_checked_at?
+  end
+
   def generate_sha1
     GenerateSHA1Job.perform_later(self)
   end
@@ -49,8 +63,52 @@ class TrackedFile < ActiveRecord::Base
     GenerateMD5Job.perform_later(self)
   end
 
+  def set_sha1!
+    super
+  rescue Errno::ENOENT => e
+    track_deletion(e)
+  end
+
+  def check_fixity?
+    fixity_checkable? && (!fixity_checked? || fixity_check_due?)
+  end
+
   def check_fixity!
-    FixityCheck.call(self)
+    if fixity_checkable?
+      FixityCheck.call(self)
+    else
+      raise FileTracker::FixityError, "Tracked file #{id} cannot be fixity checked: #{tracked_file.inspect}"
+    end
+  end
+
+  def track!
+    if new_record?
+      save!
+    elsif ok?
+      check_size!
+    end
+  end
+
+  def check_size!
+    current_size = calculate_size
+    if size != current_size
+      modified!
+      save if changed?
+      TrackedChange.find_or_create_by(tracked_file: self,
+                                      change_type: TrackedChange::MODIFICATION,
+                                      size: current_size)
+    end
+  rescue Errno::ENOENT => e
+    track_deletion(e)
+  end
+
+  def track_deletion(exception)
+    raise exception if new_record?
+    missing!
+    save if changed?
+    TrackedChange.find_or_create_by(tracked_file: self,
+                                    change_type: TrackedChange::DELETION,
+                                    change_status: TrackedChange::PENDING)
   end
 
 end

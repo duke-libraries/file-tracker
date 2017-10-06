@@ -1,16 +1,20 @@
 module FileTracker
   module Constants
 
-    def values
-      @values ||= constants(false).map { |c| const_get(c) }.sort
+    delegate :keys, :values, :each, to: :to_h
+
+    def to_h
+      @hash ||= constants(false).each_with_object({}) do |c, memo|
+        memo[c.to_s.downcase] = const_get(c)
+      end
     end
 
     def self.extended(base)
       base.module_eval do
-        constants(false).each do |c|
-          define_singleton_method c.to_s.downcase do
-            const_get(c)
-          end
+        # creates a class method in the extended module
+        # for each constant key.
+        each do |key, value|
+          define_singleton_method(key) { value }
         end
       end
     end
