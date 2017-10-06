@@ -1,12 +1,12 @@
 module FileTracker
   module Constants
 
-    def values
-      @values ||= constants(false).map { |c| const_get(c) }.sort
-    end
+    delegate :keys, :values, :each, to: :to_h
 
-    def keys
-      @keys ||= constants(false).map { |c| c.to_s.downcase }
+    def to_h
+      @hash ||= constants(false).each_with_object({}) do |c, memo|
+        memo[c.to_s.downcase] = const_get(c)
+      end
     end
 
     def self.extended(base)

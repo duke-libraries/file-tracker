@@ -1,7 +1,8 @@
 class FixityCheck < ActiveRecord::Base
 
-  include FileTracker::Status
+  # include FileTracker::Status
   include HasFixity
+  include HasStatus
   include FixityCheckResultAdmin
 
   belongs_to :tracked_file
@@ -20,15 +21,9 @@ class FixityCheck < ActiveRecord::Base
     end
   end
 
-  FileTracker::Status.keys.each do |key|
-    value = FileTracker::Status.send(key)
-
-    define_method "#{key}?" do
-      status == value
-    end
-
+  FileTracker::Status.each do |key, value|
     define_method "#{key}!" do |message = nil|
-      self.status = value
+      super()
       self.message = message if message
     end
   end

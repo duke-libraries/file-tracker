@@ -1,6 +1,7 @@
 class TrackedFile < ActiveRecord::Base
 
   include HasFixity
+  include HasStatus
   include TrackedFileAdmin
 
   has_many :fixity_checks, dependent: :destroy
@@ -12,23 +13,7 @@ class TrackedFile < ActiveRecord::Base
   before_create :set_size, unless: :size?
   after_create :generate_sha1, unless: :sha1?
 
-  scope :status, ->(v) { where(status: v) }
-  scope :not_ok, ->{ where.not(status: FileTracker::Status::OK) }
   scope :large, ->{ where("size >= ?", FileTracker.large_file_threshhold) }
-
-  FileTracker::Status.keys.each do |key|
-    scope key, ->{ status FileTracker::Status.send(key) }
-
-    value = FileTracker::Status.send(key)
-
-    define_method "#{key}?" do
-      status == value
-    end
-
-    define_method "#{key}!" do
-      self.status = value
-    end
-  end
 
   def self.check_fixity?
     where("sha1 IS NOT NULL AND (fixity_checked_at IS NULL OR fixity_checked_at < ?)",
