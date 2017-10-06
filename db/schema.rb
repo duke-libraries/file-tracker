@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171006134124) do
+ActiveRecord::Schema.define(version: 20171006171222) do
 
   create_table "fixity_checks", force: :cascade do |t|
     t.string "sha1"
@@ -36,6 +36,7 @@ ActiveRecord::Schema.define(version: 20171006134124) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "tracked_file_id"
+    t.text "message"
     t.index ["change_status"], name: "index_tracked_changes_on_change_status"
     t.index ["change_type"], name: "index_tracked_changes_on_change_type"
     t.index ["created_at"], name: "index_tracked_changes_on_created_at"

@@ -94,9 +94,12 @@ class TrackedFile < ActiveRecord::Base
     if size != current_size
       modified!
       save if changed?
-      TrackedChange.find_or_create_by(tracked_file: self,
-                                      change_type: TrackedChange::MODIFICATION,
-                                      size: current_size)
+      message = I18n.t("file_tracker.error.modification.size",
+                       expected: size,
+                       actual: current_size)
+      TrackedChange.create_modification!(tracked_file: self,
+                                         size: current_size,
+                                         message: message)
     end
   rescue Errno::ENOENT => e
     track_deletion(e)
@@ -106,9 +109,7 @@ class TrackedFile < ActiveRecord::Base
     raise exception if new_record?
     missing!
     save if changed?
-    TrackedChange.find_or_create_by(tracked_file: self,
-                                    change_type: TrackedChange::DELETION,
-                                    change_status: TrackedChange::PENDING)
+    TrackedChange.create_deletion!(tracked_file: self)
   end
 
 end

@@ -11,7 +11,7 @@ class BatchFixityCheck
   end
 
   def call
-    tracked_files = TrackedFile.check_fixity?.order(fixity_checked_at: :asc, created_at: :asc)
+    tracked_files = TrackedFile.check_fixity?.order(fixity_checked_at: :asc, created_at: :asc).limit(max)
     queue(tracked_files)
   end
 

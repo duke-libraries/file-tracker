@@ -5,11 +5,23 @@ RSpec.describe FixityCheck do
   subject { described_class.new(tracked_file: tracked_file) }
 
   let(:path) { File.join(fixture_path, "nypl.jpg") }
-  let(:tracked_file) { TrackedFile.create(path: path, sha1: "37781031df4573b90ef045889b7da0ab2655bf74") }
+  let(:tracked_file) { TrackedFile.create(path: path, sha1: sha1, size: size) }
+  let(:sha1) { "37781031df4573b90ef045889b7da0ab2655bf74" }
+  let(:size) { 410226 }
+
+  describe "updating the tracked file" do
+    it "updates the fixity_checked_at date" do
+      expect { subject.execute }.to change(tracked_file, :fixity_checked_at).from(nil)
+    end
+    it "updates the status" do
+      allow(File).to receive(:size).with(path) { 410225 }
+      expect { subject.execute }.to change(tracked_file, :status).to(FileTracker::Status::MODIFIED)
+    end
+  end
 
   describe "check_size" do
     it "sets the size attribute" do
-      expect { subject.check_size }.to change(subject, :size).to(410226)
+      expect { subject.check_size }.to change(subject, :size).to(size)
     end
     describe "when size has changed" do
       it "raises an exception" do
@@ -49,17 +61,28 @@ RSpec.describe FixityCheck do
         end
       end
       describe "and the sha1 has changed" do
-        it "sets the status to MODIFIED" do
-          allow(subject).to receive(:calculate_sha1) { "37781031df4573b90ef045889b7da0ab2655bf73" }
-          expect { subject.check }.to change(subject, :status).to(FileTracker::Status::MODIFIED)
+        let(:new_sha1) { "37781031df4573b90ef045889b7da0ab2655bf73" }
+        before do
+          allow(subject).to receive(:calculate_sha1) { new_sha1 }
+          subject.check
         end
+        it { is_expected.to be_modified }
+        its(:message) { is_expected.to eq "Expected SHA1 {#{sha1}}; actual SHA1 {#{new_sha1}}" }
       end
     end
     describe "when the size has changed" do
+      let(:new_size) { 410225 }
+      before do
+        allow(File).to receive(:size).with(tracked_file.path) { new_size }
+      end
       it "does not check the sha1" do
-        allow(File).to receive(:size).with(tracked_file.path) { 410225 }
         expect(subject).not_to receive(:check_sha1)
         subject.check
+      end
+      describe "after size check" do
+        before { subject.check }
+        it { is_expected.to be_modified }
+        its(:message) { is_expected.to eq "Expected size: #{size}; actual size: #{new_size}" }
       end
     end
     describe "when the file is missing" do
