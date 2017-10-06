@@ -8,6 +8,10 @@ RSpec.describe TrackedChange do
 
   describe "accept!" do
     describe "modification" do
+      before do
+        tracked_file.modified!
+        tracked_file.save!
+      end
       describe "size" do
         subject {
           described_class.create(tracked_file: tracked_file,

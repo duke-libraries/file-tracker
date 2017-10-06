@@ -7,13 +7,13 @@ class TrackedFile < ActiveRecord::Base
   has_many :tracked_changes, dependent: :destroy
 
   validates :path, file_exists: true, readable: true, uniqueness: true
-  validates_inclusion_of :status, in: FileTracker::Status.values, allow_nil: true
+  validates_inclusion_of :status, in: FileTracker::Status.values
 
   before_create :set_size, unless: :size?
   after_create :generate_sha1, unless: :sha1?
 
   scope :status, ->(v) { where(status: v) }
-  scope :not_ok, ->{ where("status > ?", FileTracker::Status::OK) }
+  scope :not_ok, ->{ where.not(status: FileTracker::Status::OK) }
   scope :large, ->{ where("size >= ?", FileTracker.large_file_threshhold) }
 
   FileTracker::Status.keys.each do |key|
@@ -104,7 +104,7 @@ class TrackedFile < ActiveRecord::Base
   def track!
     if new_record?
       save!
-    elsif ok? || status.nil?
+    elsif ok?
       check_size!
     end
   end

@@ -96,6 +96,8 @@ RSpec.describe TrackedFile do
       describe "ok" do
         specify {
           file = TrackedFile.create(path: path)
+          file.status = FileTracker::Status::MODIFIED
+          file.save!
           expect(TrackedFile.ok).not_to include file
           file.status = FileTracker::Status::OK
           file.save!
@@ -135,15 +137,7 @@ RSpec.describe TrackedFile do
   describe "fixity status value methods" do
     subject { described_class.new(path: path) }
     let(:path) { File.join(fixture_path, "nypl.jpg") }
-
-    describe "when fixity status is nil" do
-      it { is_expected.to_not be_ok }
-      it { is_expected.to_not be_modified }
-      it { is_expected.to_not be_missing }
-      it { is_expected.to_not be_error }
-    end
     describe "when fixity status is OK" do
-      before { subject.status = FileTracker::Status::OK }
       it { is_expected.to be_ok }
       it { is_expected.to_not be_modified }
       it { is_expected.to_not be_missing }
@@ -172,6 +166,7 @@ RSpec.describe TrackedFile do
     end
     describe "ok!" do
       specify {
+        subject.status = FileTracker::Status::MODIFIED
         expect { subject.ok! }.to change(subject, :status).to(FileTracker::Status::OK)
       }
     end
