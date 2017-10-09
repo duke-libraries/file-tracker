@@ -7,13 +7,17 @@ module TrackedFileAdmin
 
       list do
         scopes [nil, :ok, :not_ok, :modified, :missing, :error]
-        field :path
+        field :id
         field :created_at do
           date_format :short
         end
         field :status, :status do
           pretty_status
         end
+        field :size, :byte_size do
+          pretty_size
+        end
+        field :path
       end
 
       show do
