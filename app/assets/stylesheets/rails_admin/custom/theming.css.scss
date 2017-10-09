@@ -1,4 +1,6 @@
-.rails_admin .tracked_file_row .path_field {
+.rails_admin .tracked_file_row .path_field,
+.rails_admin .tracked_change_row .tracked_file_field,
+.rails_admin .fixity_check_row .tracked_file_field {
     width: 65%;
     min-with: 65%;
 }
