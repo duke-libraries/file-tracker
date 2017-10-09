@@ -33,6 +33,8 @@ module TrackedFileAdmin
         field :size, :byte_size do
           pretty_size
         end
+        field :tracked_changes
+        field :fixity_checks
       end
     end
   end

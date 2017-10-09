@@ -23,6 +23,8 @@ RailsAdmin.config do |config|
     show_in_app
   end
 
+  config.main_app_name = "DUL FileTracker v#{FileTracker::VERSION}"
+
   config.navigation_static_links = {
     'Queues' => '/queues',
   }

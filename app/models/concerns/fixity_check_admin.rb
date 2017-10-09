@@ -3,11 +3,11 @@ module FixityCheckAdmin
 
   included do
     rails_admin do
-      object_label_method { :path }
+      # object_label_method { :path }
 
       list do
         scopes [nil, :ok, :not_ok, :modified, :missing, :error]
-        field :path
+        field :tracked_file
         field :status, :status do
           pretty_status
         end
@@ -19,7 +19,7 @@ module FixityCheckAdmin
 
       show do
         field :id
-        field :path
+        field :tracked_file
         field :status, :status do
           pretty_status
         end
