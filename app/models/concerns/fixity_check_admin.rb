@@ -7,27 +7,28 @@ module FixityCheckAdmin
 
       list do
         scopes [nil, :ok, :not_ok, :modified, :missing, :error]
-        field :tracked_file
-        field :status, :status do
-          pretty_status
-        end
+        field :id
         field :started_at do
           label { "Checked At" }
           date_format :short
         end
+        field :status, :status do
+          pretty_status
+        end
+        field :tracked_file
       end
 
       show do
         field :id
         field :tracked_file
-        field :status, :status do
-          pretty_status
-        end
         field :started_at do
           date_format :long
         end
         field :finished_at do
           date_format :long
+        end
+        field :status, :status do
+          pretty_status
         end
         field :md5
         field :sha1

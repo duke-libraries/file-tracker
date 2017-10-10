@@ -5,26 +5,27 @@ module TrackedChangeAdmin
     rails_admin do
       list do
         scopes [nil, :modification, :deletion, :pending, :accepted, :rejected]
-        field :tracked_file
-        field :change_type do
-          pretty_value { I18n.t("file_tracker.change.type.#{value}") }
-        end
+        field :id
         field :discovered_at do
           date_format :short
+        end
+        field :change_type do
+          pretty_value { I18n.t("file_tracker.change.type.#{value}") }
         end
         field :change_status do
           pretty_value { I18n.t("file_tracker.change.status.#{value}") }
         end
+        field :tracked_file
       end
 
       show do
         field :id
         field :tracked_file
-        field :change_type do
-          pretty_value { I18n.t("file_tracker.change.type.#{value}") }
-        end
         field :discovered_at do
           date_format :long
+        end
+        field :change_type do
+          pretty_value { I18n.t("file_tracker.change.type.#{value}") }
         end
         field :change_status do
           pretty_value { I18n.t("file_tracker.change.status.#{value}") }

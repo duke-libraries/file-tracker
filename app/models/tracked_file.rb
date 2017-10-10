@@ -7,7 +7,7 @@ class TrackedFile < ActiveRecord::Base
   has_many :fixity_checks, dependent: :destroy
   has_many :tracked_changes, dependent: :destroy
 
-  validates :path, file_exists: true, readable: true, uniqueness: true
+  validates :path, file_exists: true, readable: true, uniqueness: true, on: :create
   validates_inclusion_of :status, in: FileTracker::Status.values
 
   before_create :set_size, unless: :size?
@@ -93,7 +93,7 @@ class TrackedFile < ActiveRecord::Base
     current_size = calculate_size
     if size != current_size
       modified!
-      save if changed?
+      save! if changed?
       message = I18n.t("file_tracker.error.modification.size",
                        expected: size,
                        actual: current_size)
@@ -108,7 +108,7 @@ class TrackedFile < ActiveRecord::Base
   def track_deletion(exception)
     raise exception if new_record?
     missing!
-    save if changed?
+    save! if changed?
     TrackedChange.create_deletion!(tracked_file: self)
   end
 
