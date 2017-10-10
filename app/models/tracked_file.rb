@@ -64,7 +64,23 @@ class TrackedFile < ActiveRecord::Base
   end
 
   def set_sha1!
-    super
+    set_sha1
+    check_size
+    save! if sha1_changed?
+  rescue FileTracker::ModifiedFileError => e
+    self.sha1 = sha1_was if sha1_changed?
+    track_modification(e)
+  rescue Errno::ENOENT => e
+    track_deletion(e)
+  end
+
+  def set_md5!
+    set_md5
+    check_size
+    save! if md5_changed?
+  rescue FileTracker::ModifiedFileError => e
+    self.md5 = md5_was if md5_changed?
+    track_modification(e)
   rescue Errno::ENOENT => e
     track_deletion(e)
   end
@@ -90,19 +106,21 @@ class TrackedFile < ActiveRecord::Base
   end
 
   def check_size!
-    current_size = calculate_size
-    if size != current_size
-      modified!
-      save! if changed?
-      message = I18n.t("file_tracker.error.modification.size",
-                       expected: size,
-                       actual: current_size)
-      TrackedChange.create_modification!(tracked_file: self,
-                                         size: current_size,
-                                         message: message)
-    end
+    check_size
+  rescue FileTracker::ModifiedFileError => e
+    track_modification(e)
   rescue Errno::ENOENT => e
     track_deletion(e)
+  end
+
+  def check_size
+    actual_size = calculate_size
+    if size != actual_size
+      raise FileTracker::ModifiedFileError,
+            I18n.t("file_tracker.error.modification.size",
+                       expected: size,
+                       actual: actual_size)
+    end
   end
 
   def track_deletion(exception)
@@ -110,6 +128,14 @@ class TrackedFile < ActiveRecord::Base
     missing!
     save! if changed?
     TrackedChange.create_deletion!(tracked_file: self)
+  end
+
+  def track_modification(exception)
+    raise exception if new_record?
+    modified!
+    save! if changed?
+    TrackedChange.create_modification(tracked_file: self,
+                                      message: exception.message)
   end
 
 end

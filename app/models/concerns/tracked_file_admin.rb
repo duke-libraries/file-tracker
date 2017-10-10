@@ -26,6 +26,9 @@ module TrackedFileAdmin
         field :created_at do
           date_format :long
         end
+        field :updated_at do
+          date_format :long
+        end
         field :status, :status do
           pretty_status
         end
