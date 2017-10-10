@@ -30,6 +30,7 @@ module TrackedChangeAdmin
         field :change_status do
           pretty_value { I18n.t("file_tracker.change.status.#{value}") }
         end
+        field :message
         field :sha1
         field :size, :byte_size do
           pretty_size
