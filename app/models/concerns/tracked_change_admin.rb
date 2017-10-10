@@ -4,7 +4,7 @@ module TrackedChangeAdmin
   included do
     rails_admin do
       list do
-        scopes [nil, :modification, :deletion, :pending, :accepted, :rejected]
+        scopes [:pending, :modification, :deletion, :accepted, :rejected, nil]
         field :id
         field :discovered_at do
           date_format :short
@@ -36,6 +36,9 @@ module TrackedChangeAdmin
           pretty_size
         end
         field :created_at do
+          date_format :long
+        end
+        field :updated_at do
           date_format :long
         end
       end

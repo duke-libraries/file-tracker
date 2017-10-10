@@ -44,6 +44,25 @@ RSpec.describe TrackedFile do
           subject.reload
           expect(subject.sha1).to eq sha1
         end
+        describe "when the file size has changed" do
+          subject { described_class.new(path: path, size: 410226) }
+          before do
+            allow(File).to receive(:size).with(path) { 410225 }
+            subject.save!
+          end
+          it "tracks a modification" do
+            tracked_change = subject.tracked_changes.last
+            expect(tracked_change).to be_modification
+          end
+          it "marks the file as MODIFIED" do
+            subject.reload
+            expect(subject).to be_modified
+          end
+          it "does not set the SHA1" do
+            subject.reload
+            expect(subject.sha1).to be_nil
+          end
+        end
         describe "when set_sha1 encounters a file not found error" do
           it "tracks a deletion" do
             expect_any_instance_of(described_class).to receive(:set_sha1).and_raise(Errno::ENOENT)
