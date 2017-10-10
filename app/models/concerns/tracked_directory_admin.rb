@@ -32,6 +32,9 @@ module TrackedDirectoryAdmin
         field :created_at do
           date_format :long
         end
+        field :updated_at do
+          date_format :long
+        end
         field :tracked_at do
           date_format :long
         end
