@@ -2,11 +2,14 @@ require 'rails_helper'
 
 RSpec.describe TrackedFile do
 
+  let(:path) { File.join(fixture_path, "nypl.jpg") }
+  let(:sha1) { "37781031df4573b90ef045889b7da0ab2655bf74" }
+  let(:size) { 410226 }
+
   describe "create" do
-    let(:path) { File.join(fixture_path, "nypl.jpg") }
     describe "size calculation" do
       describe "when size is provided" do
-        subject { described_class.new(path: path, size: 410226) }
+        subject { described_class.new(path: path, size: size) }
         it "does not set the size" do
           expect(subject).not_to receive(:size=)
           subject.save!
@@ -17,12 +20,11 @@ RSpec.describe TrackedFile do
         it "sets the size" do
           expect(subject).to receive(:size=).and_call_original
           subject.save!
-          expect(subject.size).to eq 410226
+          expect(subject.size).to eq size
         end
       end
     end
     describe "SHA1 generation" do
-      let(:sha1) { "37781031df4573b90ef045889b7da0ab2655bf74" }
       describe "when a SHA1 is provided" do
         subject { described_class.new(path: path, sha1: sha1) }
         it "does not try to generate a SHA1" do
@@ -45,7 +47,7 @@ RSpec.describe TrackedFile do
           expect(subject.sha1).to eq sha1
         end
         describe "when the file size has changed" do
-          subject { described_class.new(path: path, size: 410226) }
+          subject { described_class.new(path: path, size: size) }
           before do
             allow(File).to receive(:size).with(path) { 410225 }
             subject.save!
@@ -81,6 +83,25 @@ RSpec.describe TrackedFile do
     end
   end
 
+  describe "save" do
+    describe "SHA1 re-generation" do
+      subject { described_class.create(path: path, sha1: sha1) }
+      describe "when SHA1 is present" do
+        it "does not try to generate a SHA1" do
+          expect(subject).not_to receive(:generate_sha1)
+          subject.touch
+        end
+      end
+      describe "when SHA1 is not present" do
+        it "re-generates a SHA1" do
+          expect(subject).to receive(:generate_sha1).and_call_original
+          subject.sha1 = nil
+          subject.save!
+        end
+      end
+    end
+  end
+
   describe "class methods" do
     describe ".track!" do
       let(:dir) { Dir.mktmpdir }
@@ -104,8 +125,6 @@ RSpec.describe TrackedFile do
     end
 
     describe "scopes" do
-      let(:path) { File.join(fixture_path, "nypl.jpg") }
-
       describe "not_ok" do
         specify {
           file = TrackedFile.create(path: path)
@@ -155,7 +174,6 @@ RSpec.describe TrackedFile do
 
   describe "status value methods" do
     subject { described_class.new(path: path) }
-    let(:path) { File.join(fixture_path, "nypl.jpg") }
     describe "when status is OK" do
       it { is_expected.to be_ok }
       it { is_expected.to_not be_modified }
@@ -207,7 +225,6 @@ RSpec.describe TrackedFile do
   end
 
   describe "fixity checking boolean methods" do
-    let(:path) { File.join(fixture_path, "nypl.jpg") }
     subject { described_class.new(path: path) }
     describe "fixity_checkable?" do
       it { is_expected.to_not be_fixity_checkable }
@@ -323,7 +340,6 @@ RSpec.describe TrackedFile do
   end
 
   describe "track!" do
-    let(:path) { File.join(fixture_path, "nypl.jpg") }
     describe "with a new record" do
       subject { described_class.new(path: path) }
       it "saves the record" do
@@ -331,7 +347,7 @@ RSpec.describe TrackedFile do
       end
     end
     describe "with an existing record" do
-      subject { described_class.create!(path: path, size: 410226) }
+      subject { described_class.create!(path: path, size: size) }
       describe "when the file size has not changed" do
         it "does nothing" do
           expect { subject.track! }.not_to change { subject.tracked_changes.count }
@@ -380,9 +396,6 @@ RSpec.describe TrackedFile do
     subject {
       described_class.create!(path: path, size: size, sha1: sha1)
     }
-    let(:path) { File.join(fixture_path, "nypl.jpg") }
-    let(:size) { 410226 }
-    let(:sha1) { "37781031df4573b90ef045889b7da0ab2655bf74" }
     its(:check_fixity!) { is_expected.to be_ok }
     describe "when changed" do
       describe "when size has changed" do
@@ -464,7 +477,6 @@ RSpec.describe TrackedFile do
       allow(FileTracker.configuration).to receive(:large_file_threshhold) { 200 }
     end
     describe "when size is nil" do
-      let(:path) { File.join(fixture_path, "nypl.jpg") }
       subject { described_class.new(path: path) }
       it { is_expected.to_not be_large }
     end
