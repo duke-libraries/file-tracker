@@ -11,7 +11,7 @@ class TrackedFile < ActiveRecord::Base
   validates_inclusion_of :status, in: FileTracker::Status.values
 
   before_create :set_size, unless: :size?
-  after_create :generate_sha1, unless: :sha1?
+  after_save :generate_sha1, if: :generate_sha1?
 
   scope :large, ->{ where("size >= ?", FileTracker.large_file_threshhold) }
 
@@ -53,6 +53,10 @@ class TrackedFile < ActiveRecord::Base
 
   def fixity_checked?
     fixity_checked_at?
+  end
+
+  def generate_sha1?
+    !sha1? && ok?
   end
 
   def generate_sha1
