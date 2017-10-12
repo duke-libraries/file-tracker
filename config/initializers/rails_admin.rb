@@ -5,6 +5,8 @@ RailsAdmin.config do |config|
   end
   config.current_user_method(&:current_user)
 
+  config.excluded_models << "User"
+
   ## == Cancan ==
   # config.authorize_with :cancan
 
