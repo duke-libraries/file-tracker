@@ -9,10 +9,6 @@ module TrackedDirectoryAdmin
         field :id
         field :title
         field :path
-        # field :count
-        # field :size, :byte_size do
-        #   pretty_size
-        # end
         field :created_at do
           date_format :short
         end
@@ -38,6 +34,10 @@ module TrackedDirectoryAdmin
         field :tracked_at do
           date_format :long
         end
+      end
+
+      edit do
+        field :title
       end
     end
   end
