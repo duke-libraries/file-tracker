@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171006171222) do
+ActiveRecord::Schema.define(version: 20171013133839) do
 
   create_table "fixity_checks", force: :cascade do |t|
     t.string "sha1"
@@ -68,6 +68,15 @@ ActiveRecord::Schema.define(version: 20171006171222) do
     t.index ["size"], name: "index_tracked_files_on_size"
     t.index ["status"], name: "index_tracked_files_on_status"
     t.index ["updated_at"], name: "index_tracked_files_on_updated_at"
+  end
+
+  create_table "users", force: :cascade do |t|
+    t.string "uid", default: "", null: false
+    t.string "email"
+    t.string "encrypted_password", default: "", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.boolean "is_admin", default: false
   end
 
 end
