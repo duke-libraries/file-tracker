@@ -13,6 +13,4 @@ Rails.application.routes.draw do
 
   root to: "rails_admin/main#dashboard"
 
-  get '/signed_out', to: redirect('/signed_out.html'), as: 'signed_out'
-
 end

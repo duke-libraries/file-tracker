@@ -7,17 +7,19 @@ RailsAdmin.config do |config|
 
   config.authorize_with :cancan
 
+  config.included_models = %w( TrackedDirectory TrackedFile TrackedChange FixityCheck User )
+
   config.actions do
     dashboard # mandatory
     index     # mandatory
     new do
-      only [ "TrackedDirectory" ]
+      only %w( TrackedDirectory )
     end
     export
     # bulk_delete
     show
     edit do
-      only [ "TrackedDirectory" ]
+      only %w( TrackedDirectory User )
     end
     # delete
     show_in_app

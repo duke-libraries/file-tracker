@@ -16,6 +16,7 @@ en:
     attributes:
       user:
         uid: User ID
+        is_admin: Admin?
       tracked_change:
         change_type: Type
         change_status: Status        

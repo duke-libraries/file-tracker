@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171012195857) do
+ActiveRecord::Schema.define(version: 20171013133839) do
 
   create_table "fixity_checks", force: :cascade do |t|
     t.string "sha1"
@@ -76,6 +76,7 @@ ActiveRecord::Schema.define(version: 20171012195857) do
     t.string "encrypted_password", default: "", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "is_admin", default: false
   end
 
 end
