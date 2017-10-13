@@ -12,6 +12,7 @@ gem 'jbuilder', '~> 2.5'
 gem 'figaro'
 gem 'devise'
 gem 'omniauth-shibboleth'
+gem 'cancancan'
 
 gem 'redis', '~> 3.0'
 gem 'resque', '~> 1.27'

@@ -5,22 +5,20 @@ RailsAdmin.config do |config|
   end
   config.current_user_method(&:current_user)
 
-  config.excluded_models << "User"
-
-  ## == Cancan ==
-  # config.authorize_with :cancan
-
-  ## == Pundit ==
-  # config.authorize_with :pundit
+  config.authorize_with :cancan
 
   config.actions do
-    dashboard                     # mandatory
-    index                         # mandatory
-    # new
+    dashboard # mandatory
+    index     # mandatory
+    new do
+      only [ "TrackedDirectory" ]
+    end
     export
     # bulk_delete
     show
-    # edit
+    edit do
+      only [ "TrackedDirectory" ]
+    end
     # delete
     show_in_app
   end

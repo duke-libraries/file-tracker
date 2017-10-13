@@ -10,10 +10,12 @@ en:
       tracked_file:
         one: File
         other: Files
-      fixity_check_result:
+      fixity_check:
         one: Fixity Check
         other: Fixity Checks
     attributes:
+      user:
+        uid: User ID
       tracked_change:
         change_type: Type
         change_status: Status        
@@ -24,12 +26,12 @@ en:
         size: Total Size
         tracked_at: Inventoried
       tracked_file:
-        created_at: Added
+        created_at: Discovered
         fixity_checked_at: Fixity Checked
-      fixity_check_result:
+      fixity_check:
         checked_at: Checked At
-        started_at: Started
-        finished_at: Finished
+        started_at: Started At
+        finished_at: Finished At
   attributes:
     id: ID
     md5: MD5
