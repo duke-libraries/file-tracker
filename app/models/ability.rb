@@ -23,7 +23,6 @@ class Ability
     can :dashboard, :all        # grant access to the dashboard
     can :access, :rails_admin   # grant access to rails_admin
     can :read, [ TrackedDirectory, TrackedFile, TrackedChange, FixityCheck ]
-    can :read, User, id: user.id
 
     can :manage, :all if admin?
   end
