@@ -4,6 +4,7 @@ RSpec.describe TrackedFile do
 
   let(:path) { File.join(fixture_path, "nypl.jpg") }
   let(:sha1) { "37781031df4573b90ef045889b7da0ab2655bf74" }
+  let(:md5) { "57a88467c003f53d316a92e8896833b0" }
   let(:size) { 410226 }
 
   describe "create" do
@@ -24,79 +25,116 @@ RSpec.describe TrackedFile do
         end
       end
     end
+    describe "when the file size has changed" do
+      subject { described_class.new(path: path, size: size) }
+      before do
+        allow(File).to receive(:size).with(path) { 410225 }
+        subject.save!
+      end
+      it "tracks a modification" do
+        tracked_change = subject.tracked_changes.last
+        expect(tracked_change).to be_modification
+      end
+      it "marks the file as MODIFIED" do
+        subject.reload
+        expect(subject).to be_modified
+      end
+      it "does not set the SHA1" do
+        subject.reload
+        expect(subject.sha1).to be_nil
+      end
+      it "does not set the MD5" do
+        subject.reload
+        expect(subject.md5).to be_nil
+      end
+    end
+    describe "when set_sha1 encounters a file not found error" do
+      subject { described_class.new(path: path, size: size) }
+      it "tracks a deletion" do
+        expect_any_instance_of(described_class).to receive(:set_sha1).and_raise(Errno::ENOENT)
+        subject.save!
+        tracked_change = subject.tracked_changes.last
+        expect(tracked_change).to be_deletion
+      end
+      it "marks the file as MISSING" do
+        expect_any_instance_of(described_class).to receive(:set_sha1).and_raise(Errno::ENOENT)
+        subject.save!
+        subject.reload
+        expect(subject).to be_missing
+      end
+    end
+    describe "when set_md5 encounters a file not found error" do
+      subject { described_class.new(path: path, size: size) }
+      it "tracks a deletion" do
+        expect_any_instance_of(described_class).to receive(:set_md5).and_raise(Errno::ENOENT)
+        subject.save!
+        tracked_change = subject.tracked_changes.last
+        expect(tracked_change).to be_deletion
+      end
+      it "marks the file as MISSING" do
+        expect_any_instance_of(described_class).to receive(:set_md5).and_raise(Errno::ENOENT)
+        subject.save!
+        subject.reload
+        expect(subject).to be_missing
+      end
+    end
+  end # create
+
+  describe "save" do
     describe "SHA1 generation" do
-      describe "when a SHA1 is provided" do
-        subject { described_class.new(path: path, sha1: sha1) }
+      describe "when SHA1 is present" do
+        subject { described_class.create(path: path, sha1: sha1) }
         it "does not try to generate a SHA1" do
           expect(subject).not_to receive(:generate_sha1)
-          subject.save!
+          subject.touch
         end
         describe "when explicitly calling #generate_sha1" do
-          before { subject.save! }
           it "does not generate a SHA1" do
             expect(subject).not_to receive(:sha1=)
             subject.generate_sha1
           end
         end
       end
-      describe "when a SHA1 is not provided" do
+      describe "when a SHA1 is not present" do
         subject { described_class.new(path: path) }
         it "generates a SHA1" do
           subject.save!
           subject.reload
           expect(subject.sha1).to eq sha1
         end
-        describe "when the file size has changed" do
-          subject { described_class.new(path: path, size: size) }
-          before do
-            allow(File).to receive(:size).with(path) { 410225 }
-            subject.save!
-          end
-          it "tracks a modification" do
-            tracked_change = subject.tracked_changes.last
-            expect(tracked_change).to be_modification
-          end
-          it "marks the file as MODIFIED" do
-            subject.reload
-            expect(subject).to be_modified
-          end
-          it "does not set the SHA1" do
-            subject.reload
-            expect(subject.sha1).to be_nil
-          end
-        end
-        describe "when set_sha1 encounters a file not found error" do
-          it "tracks a deletion" do
-            expect_any_instance_of(described_class).to receive(:set_sha1).and_raise(Errno::ENOENT)
-            subject.save!
-            tracked_change = subject.tracked_changes.last
-            expect(tracked_change).to be_deletion
-          end
-          it "marks the file as MISSING" do
-            expect_any_instance_of(described_class).to receive(:set_sha1).and_raise(Errno::ENOENT)
-            subject.save!
-            subject.reload
-            expect(subject).to be_missing
-          end
-        end
       end
     end
-  end
-
-  describe "save" do
-    describe "SHA1 re-generation" do
-      subject { described_class.create(path: path, sha1: sha1) }
-      describe "when SHA1 is present" do
-        it "does not try to generate a SHA1" do
-          expect(subject).not_to receive(:generate_sha1)
+    describe "MD5 generation" do
+      describe "when MD5 is present" do
+        subject { described_class.create(path: path, md5: md5) }
+        it "does not try to generate an MD5" do
+          expect(subject).not_to receive(:generate_md5)
           subject.touch
         end
+        describe "when explicitly calling #generate_md5" do
+          it "does not generate an MD5" do
+            expect(subject).not_to receive(:md5=)
+            subject.generate_sha1
+          end
+        end
       end
-      describe "when SHA1 is not present" do
-        it "re-generates a SHA1" do
-          expect(subject).to receive(:generate_sha1).and_call_original
-          subject.sha1 = nil
-          subject.save!
+      describe "when MD5 is not present" do
+        describe "and SHA1 is present" do
+          subject { described_class.new(path: path, sha1: sha1) }
+          it "generates an MD5" do
+            subject.save!
+            subject.reload
+            expect(subject.md5).to eq md5
+          end
+        end
+        describe "and SHA1 is not present" do
+          subject { described_class.new(path: path) }
+          before { allow(subject).to receive(:generate_sha1?) { false } }
+          it "does not generate an MD5" do
+            subject.save!
+            subject.reload
+            expect(subject.md5).to be_nil
+          end
         end
       end
     end

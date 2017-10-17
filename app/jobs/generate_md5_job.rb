@@ -4,7 +4,7 @@ class GenerateMD5Job < FixityJob
   self.large_file_queue = :generate_md5_large
 
   before_perform do |job|
-    throw(:abort) if tracked_file.md5?
+    throw(:abort) unless tracked_file.generate_md5?
   end
 
   def perform(tracked_file)

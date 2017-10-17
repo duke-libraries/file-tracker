@@ -12,6 +12,7 @@ class TrackedFile < ActiveRecord::Base
 
   before_create :set_size, unless: :size?
   after_save :generate_sha1, if: :generate_sha1?
+  after_save :generate_md5, if: :generate_md5?
 
   scope :large, ->{ where("size >= ?", FileTracker.large_file_threshhold) }
 
@@ -61,6 +62,10 @@ class TrackedFile < ActiveRecord::Base
 
   def generate_sha1
     GenerateSHA1Job.perform_later(self)
+  end
+
+  def generate_md5?
+    !md5? && sha1? && ok?
   end
 
   def generate_md5
