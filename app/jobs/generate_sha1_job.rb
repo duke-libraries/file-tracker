@@ -4,7 +4,7 @@ class GenerateSHA1Job < FixityJob
   self.large_file_queue = :generate_sha1_large
 
   before_perform do |job|
-    throw(:abort) if tracked_file.sha1?
+    throw(:abort) unless tracked_file.generate_sha1?
   end
 
   def perform(tracked_file)
