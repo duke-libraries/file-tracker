@@ -62,6 +62,8 @@ GEM
       warden (~> 1.2.3)
     diff-lcs (1.3)
     erubi (1.6.1)
+    et-orbi (1.0.7)
+      tzinfo
     execjs (2.7.0)
     ffi (1.9.18)
     figaro (1.1.1)
@@ -200,6 +202,11 @@ GEM
     resque-pool (0.6.0)
       rake
       resque (~> 1.22)
+    resque-scheduler (4.3.0)
+      mono_logger (~> 1.0)
+      redis (~> 3.3)
+      resque (~> 1.26)
+      rufus-scheduler (~> 3.2)
     resque-web (0.0.11)
       coffee-rails
       font-awesome-sass
@@ -228,6 +235,8 @@ GEM
       rspec-support (~> 3.6.0)
     rspec-support (3.6.0)
     ruby_dep (1.5.0)
+    rufus-scheduler (3.4.2)
+      et-orbi (~> 1.0)
     sass (3.5.1)
       sass-listen (~> 4.0.0)
     sass-listen (4.0.0)
@@ -293,6 +302,7 @@ DEPENDENCIES
   redis (~> 3.0)
   resque (~> 1.27)
   resque-pool
+  resque-scheduler
   resque-web
   rspec-its
   rspec-rails
