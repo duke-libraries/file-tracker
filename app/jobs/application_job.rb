@@ -2,11 +2,9 @@ require 'find'
 
 class ApplicationJob < ActiveJob::Base
 
-  # "resource temporarily unavailable"
-  retry_on Errno::EAGAIN, wait: 5.minutes
-
-  # "bad file descriptor"
-  retry_on Errno::EBADF
+  retry_on Errno::EAGAIN, wait: 5.minutes # resource temporarily unavailable
+  retry_on Errno::EBADF                   # bad file descriptor
+  retry_on Errno::EIO, wait: 5.minutes    # I/O error
 
   def large_file?(path)
     File.size(path) > FileTracker.large_file_threshhold
