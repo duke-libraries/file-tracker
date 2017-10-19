@@ -207,6 +207,9 @@ GEM
       redis (~> 3.3)
       resque (~> 1.26)
       rufus-scheduler (~> 3.2)
+    resque-scheduler-web (1.1.0)
+      resque-scheduler (~> 4.0)
+      resque-web (~> 0.0.8)
     resque-web (0.0.11)
       coffee-rails
       font-awesome-sass
@@ -303,6 +306,7 @@ DEPENDENCIES
   resque (~> 1.27)
   resque-pool
   resque-scheduler
+  resque-scheduler-web
   resque-web
   rspec-its
   rspec-rails
