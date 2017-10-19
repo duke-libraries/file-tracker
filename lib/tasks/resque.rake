@@ -12,5 +12,6 @@ task "resque:pool:setup" do
   # and re-open them in the resque worker parent
   Resque::Pool.after_prefork do |job|
     ActiveRecord::Base.establish_connection
+    Resque.redis.client.reconnect
   end
 end
