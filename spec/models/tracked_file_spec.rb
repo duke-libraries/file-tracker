@@ -51,28 +51,28 @@ RSpec.describe TrackedFile do
     describe "when set_sha1 encounters a file not found error" do
       subject { described_class.new(path: path, size: size) }
       it "tracks a deletion" do
-        expect_any_instance_of(described_class).to receive(:set_sha1).and_raise(Errno::ENOENT)
+        expect_any_instance_of(described_class).to receive(:set_digest).with("sha1").and_raise(Errno::ENOENT)
         subject.save!
         tracked_change = subject.tracked_changes.last
         expect(tracked_change).to be_deletion
       end
       it "marks the file as MISSING" do
-        expect_any_instance_of(described_class).to receive(:set_sha1).and_raise(Errno::ENOENT)
+        expect_any_instance_of(described_class).to receive(:set_digest).with("sha1").and_raise(Errno::ENOENT)
         subject.save!
         subject.reload
         expect(subject).to be_missing
       end
     end
     describe "when set_md5 encounters a file not found error" do
-      subject { described_class.new(path: path, size: size) }
+      subject { described_class.new(path: path, size: size, sha1: sha1) }
       it "tracks a deletion" do
-        expect_any_instance_of(described_class).to receive(:set_md5).and_raise(Errno::ENOENT)
+        expect_any_instance_of(described_class).to receive(:set_digest).with("md5").and_raise(Errno::ENOENT)
         subject.save!
         tracked_change = subject.tracked_changes.last
         expect(tracked_change).to be_deletion
       end
       it "marks the file as MISSING" do
-        expect_any_instance_of(described_class).to receive(:set_md5).and_raise(Errno::ENOENT)
+        expect_any_instance_of(described_class).to receive(:set_digest).with("md5").and_raise(Errno::ENOENT)
         subject.save!
         subject.reload
         expect(subject).to be_missing
@@ -453,7 +453,7 @@ RSpec.describe TrackedFile do
       end
       describe "when sha1 has changed" do
         before do
-          allow_any_instance_of(FixityCheck).to receive(:calculate_sha1) { "37781031df4573b90ef045889b7da0ab2655bf75" }
+          allow_any_instance_of(FixityCheck).to receive(:calculate_digest).with(:sha1) { "37781031df4573b90ef045889b7da0ab2655bf75" }
         end
         its(:check_fixity!) { is_expected.to be_modified }
         describe "tracking the modification change" do

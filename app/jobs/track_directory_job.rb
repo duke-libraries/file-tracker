@@ -1,15 +1,16 @@
+require 'find'
+
 class TrackDirectoryJob < ApplicationJob
 
-  queue_as :directory
+  self.queue = :inventory
 
-  def perform(dir)
+  def self.perform(dir)
     files = []
     Find.find(dir) do |path|
       if File.directory?(path) && path != dir
-        TrackDirectoryJob.perform_later(path)
+        Resque.enqueue(self, path)
         Find.prune
       elsif File.file?(path)
-        # TrackedFile.track!(path)
         files << path
       end
     end

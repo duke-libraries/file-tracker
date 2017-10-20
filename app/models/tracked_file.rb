@@ -56,12 +56,16 @@ class TrackedFile < ActiveRecord::Base
     fixity_checked_at?
   end
 
+  def generate_digest?(digest)
+    send "generate_#{digest}?"
+  end
+
   def generate_sha1?
     !sha1? && ok?
   end
 
   def generate_sha1
-    GenerateSHA1Job.perform_later(self)
+    generate_digest :sha1
   end
 
   def generate_md5?
@@ -69,29 +73,31 @@ class TrackedFile < ActiveRecord::Base
   end
 
   def generate_md5
-    GenerateMD5Job.perform_later(self)
+    generate_digest :md5
+  end
+
+  def generate_digest(digest)
+    queue = large? ? :digest_large : :digest
+    Resque.enqueue_to(queue, GenerateDigestJob, id, digest)
+  end
+
+  def set_digest!(digest)
+    set_digest(digest)
+    check_size
+    commit_digest(digest)
+  rescue FileTracker::ModifiedFileError => e # raised by check_size
+    rollback_digest(digest)
+    track_modification(e)
+  rescue Errno::ENOENT => e
+    track_deletion(e)
   end
 
   def set_sha1!
-    set_sha1
-    check_size
-    save! if sha1_changed?
-  rescue FileTracker::ModifiedFileError => e
-    self.sha1 = sha1_was if sha1_changed?
-    track_modification(e)
-  rescue Errno::ENOENT => e
-    track_deletion(e)
+    set_digest! :sha1
   end
 
   def set_md5!
-    set_md5
-    check_size
-    save! if md5_changed?
-  rescue FileTracker::ModifiedFileError => e
-    self.md5 = md5_was if md5_changed?
-    track_modification(e)
-  rescue Errno::ENOENT => e
-    track_deletion(e)
+    set_digest! :md5
   end
 
   def check_fixity?
@@ -145,6 +151,20 @@ class TrackedFile < ActiveRecord::Base
     save! if changed?
     TrackedChange.create_modification(tracked_file: self,
                                       message: exception.message)
+  end
+
+  private
+
+  def commit_digest(digest)
+    if send("#{digest}_changed?")
+      save!
+    end
+  end
+
+  def rollback_digest(digest)
+    if send("#{digest}_changed?")
+      self.attributes = { digest => send("#{digest}_was") }
+    end
   end
 
 end
