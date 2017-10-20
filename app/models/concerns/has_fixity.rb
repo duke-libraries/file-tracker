@@ -19,12 +19,12 @@ module HasFixity
   end
 
   def calculate_size
-    File.size(path)
+    RetryOnError.wrap { File.size(path) }
   end
 
   def calculate_digest(digest)
     digest_class = Digest.const_get(digest.to_s.upcase)
-    digest_class.file(path).hexdigest
+    RetryOnError.wrap { digest_class.file(path).hexdigest }
   end
 
   def calculate_sha1
