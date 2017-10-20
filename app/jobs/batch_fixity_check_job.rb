@@ -1,6 +1,6 @@
 class BatchFixityCheckJob < ApplicationJob
 
-  queue_as :batch_fixity
+  self.queue = :batch
 
   def perform(max = nil)
     BatchFixityCheck.call(max)

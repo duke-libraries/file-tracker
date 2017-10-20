@@ -1,6 +1,12 @@
 require 'file_tracker'
 
 namespace :file_tracker do
+  desc "Inventory tracked directories."
+  task :inventory => :environment do
+    Resque.enqueue(InventoryJob)
+    puts "Inventory job queued."
+  end
+
   desc "Print application version."
   task :version => :environment do
     puts FileTracker::VERSION
@@ -15,7 +21,7 @@ namespace :file_tracker do
     end
   end
 
-  desc "Delete all tracked directories and files from the database."
+  # desc "Delete all tracked directories and files from the database."
   task :reset => :environment do
     warn <<-EOS
 
@@ -36,40 +42,6 @@ EOS
     end
   end
 
-  desc "Track a new directory at the given path."
-  task :track, [:path] => :environment do |t, args|
-    dir = TrackedDirectory.create!(path: args[:path])
-    puts "Tracking job queued for #{dir}."
-  end
-
-  desc "Update a tracked directory by ID (list IDs with `rake file_tracker:list`)."
-  task :update, [:id] => :environment do |t, args|
-    dir = TrackedDirectory.update(args[:id].to_i)
-    puts "Tracking job queued for #{dir}."
-  end
-
-  desc "Update all tracked directories."
-  task :update_all => :environment do
-    TrackedDirectory.update_all
-    puts "All tracked directories have been queued for updating."
-  end
-
-  desc "Show the count of files tracked under a path."
-  task :count, [:path] => :environment do |t, args|
-    count = TrackedFile.under(args[:path]).count
-    puts "#{count} files tracked under path #{args[:path] || '/'}."
-  end
-
-  desc "List tracked directories."
-  task :list => :environment do
-    require 'csv'
-    CSV($stdout, col_sep: "\t", headers: %w( ID PATH ), write_headers: true) do |csv|
-      TrackedDirectory.pluck(:id, :path).each do |rec|
-        csv << rec
-      end
-    end
-  end
-
   desc "List status codes and translations."
   task :status => :environment do
     FileTracker::Status.values.each do |value|
@@ -77,19 +49,10 @@ EOS
     end
   end
 
-  namespace :fixity do
-    desc "Run the batch fixity check routine, optionally overriding the default limit (#{FileTracker.batch_fixity_check_limit})."
-    task :check, [:max] => :environment do |t, args|
-      BatchFixityCheckJob.perform_later(args[:max])
-      puts "Batch fixity check job queued."
-    end
-
-    desc "Print a summary report of fixity status."
-    task :summary => :environment do
-      FixitySummary.call.each do |status, count|
-        puts "#{status}\t#{count}"
-      end
-    end
+  desc "Run the batch fixity check routine, optionally overriding the default limit (#{FileTracker.batch_fixity_check_limit})."
+  task :fixity, [:max] => :environment do |t, args|
+    Resque.enqueue(BatchFixityCheckJob, args[:max])
+    puts "Batch fixity check job queued."
   end
 
   namespace :queues do

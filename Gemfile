@@ -18,8 +18,6 @@ gem 'redis', '~> 3.0'
 gem 'resque', '~> 1.27'
 gem 'resque-web', require: 'resque_web'
 gem 'resque-pool'
-gem 'resque-scheduler'
-gem 'resque-scheduler-web'
 
 gem 'rails_admin', '~> 1.2'
 gem 'activerecord-import', '~> 0.19'
