@@ -7,6 +7,9 @@ class TrackedDirectory < ActiveRecord::Base
   after_create :track!
 
   def self.update_all
+    warn "[DEPRECATION] `TrackedDirectory.update_all` is deprecated" \
+         " and will be removed from file-tracker v2.0.0." \
+         " Use `BatchTrackDirectoryJob` instead."
     all.each(&:track!)
   end
 
@@ -31,7 +34,7 @@ class TrackedDirectory < ActiveRecord::Base
   end
 
   def track!
-    TrackDirectoryJob.perform_later(path)
+    Resque.enqueue(TrackDirectoryJob, path)
     self.tracked_at = DateTime.now
     save!
     self

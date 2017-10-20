@@ -17,7 +17,8 @@ class BatchFixityCheck
 
   def queue(tracked_files)
     queued = tracked_files.each do |tracked_file|
-      CheckFixityJob.perform_later(tracked_file)
+      queue = CheckFixityJob.queue_for_tracked_file(tracked_file)
+      Resque.enqueue_to(queue, CheckFixityJob, tracked_file.id)
     end
     queued.size
   end

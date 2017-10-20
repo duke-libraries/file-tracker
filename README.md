@@ -21,14 +21,12 @@ MySQL database creation:
 
 ## Job queues
 
-    directory             Recursive directory inventory
-    batch_fixity          Batch fixity job - should only need 1 worker
-    check_fixity          Fixity checks
-    check_fixity_large    Fixity checks on large files
-    generate_sha1         SHA1 digest generation
-    generate_sha1_large   SHA1 digest generation for large files
-    generate_md5          MD5 digest generation
-    generate_md5_large    MD5 digest generation for large files
+    inventory       Recursive directory inventory
+    batch           Batch jobs which queue up other jobs (should only need 1 worker)
+    fixity          Fixity checks
+    fixity_large    Fixity checks on large files
+    digest          SHA1 and MD5 digest generation
+    digest_large    SHA1 and MD5 digest generation for large files
 
 Resque pool config is in the usual location `config/resque-pool.yml`.
 
@@ -46,37 +44,33 @@ See `config/locales/en.yml` for i18n keys.
 
 ## Track a directory
 
-Use the rake task:
-
-    rake file_tracker:track[path]
-
-This task will create a `TrackedDirectory` instance and begin inventorying the files under that directory.
+After a new `TrackedDirectory` instance is created (persisted), a process will automatically inventory the files under that directory.
 
 Jobs are added to three queues:
 
-    directory
-    generate_sha1
-    generate_sha1_large (file size > large file threshhold)
+    inventory
+    digest
+    digest_large (file size > large file threshhold)
 
 New files are discovered by `TrackDirectoryJob` jobs and are eagerly added to the database. File size is calculated
 before insertion.
 
-SHA1 digests are generated asynchoronously by `GenerateSHA1Job` jobs. Large files are handled in a separate queue
+SHA1 digests are generated asynchoronously by `GenerateDigestJob` jobs. Large files are handled in a separate queue
 for the sake of efficiency.
 
 ## Fixity checking
 
 To run a batch fixity check for files that are due to be (re-)checked, run:
 
-    rake file_tracker:fixity:check[:max]
+    rake file_tracker:fixity[:max]
 
 The `[:max]` argument is optional and, if present, overrides `BATCH_FIXITY_CHECK_LIMIT`.
 
-A `BatchFixityCheckJob` will be pushed onto the `:batch_fixity` queue.
+A `BatchFixityCheckJob` will be pushed onto the `:batch` queue.
 Fixity check jobs will be created in two queues:
 
-    check_fixity
-    check_fixity_large (file size > large file threshhold)
+    fixity
+    fixity_large (file size > large file threshhold)
 
 Large files are handled in a separate queue for the sake of efficiency.
 
