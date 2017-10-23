@@ -4,18 +4,6 @@ class TrackedDirectory < ActiveRecord::Base
 
   before_validation :normalize_path!
   validates :path, directory_exists: true, readable: true, uniqueness: true
-  after_create :track!
-
-  def self.update_all
-    warn "[DEPRECATION] `TrackedDirectory.update_all` is deprecated" \
-         " and will be removed from file-tracker v2.0.0." \
-         " Use `BatchTrackDirectoryJob` instead."
-    all.each(&:track!)
-  end
-
-  def self.update(id)
-    find(id).track!
-  end
 
   def to_s
     path
@@ -23,6 +11,22 @@ class TrackedDirectory < ActiveRecord::Base
 
   def tracked_files
     TrackedFile.under(path)
+  end
+
+  def duracloud_checkable_files
+    tracked_files.ok.where.not(md5: nil) if duracloud_checkable?
+  end
+
+  def duracloud_checkable?
+    duracloud_space?
+  end
+
+  def check_duracloud!
+    self.duracloud_checked_at = DateTime.now
+    duracloud_checkable_files.each do |tracked_file|
+      Resque.enqueue(DuracloudCheckJob, tracked_file.id)
+    end
+    save!
   end
 
   def count
@@ -34,8 +38,8 @@ class TrackedDirectory < ActiveRecord::Base
   end
 
   def track!
-    Resque.enqueue(TrackDirectoryJob, path)
     self.tracked_at = DateTime.now
+    Resque.enqueue(TrackDirectoryJob, path)
     save!
     self
   end
