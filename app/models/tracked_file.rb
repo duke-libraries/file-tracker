@@ -10,7 +10,7 @@ class TrackedFile < ActiveRecord::Base
   validates :path, file_exists: true, readable: true, uniqueness: true, on: :create
   validates_inclusion_of :status, in: FileTracker::Status.values
 
-  before_create :set_size, unless: :size?
+  before_create :set_size, unless: :size? # FIXME ?
   after_save :generate_sha1, if: :generate_sha1?
   after_save :generate_md5, if: :generate_md5?
 
@@ -39,6 +39,10 @@ class TrackedFile < ActiveRecord::Base
     path
   end
 
+  def tracked_directory
+    TrackedDirectory.where("path = substr(?, 1, length(path))", path).first
+  end
+
   def large?
     size? && size >= FileTracker.large_file_threshhold
   end
@@ -54,6 +58,10 @@ class TrackedFile < ActiveRecord::Base
 
   def fixity_checked?
     fixity_checked_at?
+  end
+
+  def duracloud_checkable?
+    persisted? && md5? && ok? && tracked_directory.duracloud_space?
   end
 
   def generate_digest?(digest)
@@ -108,7 +116,17 @@ class TrackedFile < ActiveRecord::Base
     if fixity_checkable?
       FixityCheck.call(self)
     else
-      raise FileTracker::FixityError, "Tracked file #{id} cannot be fixity checked: #{tracked_file.inspect}"
+      raise FileTracker::FixityError,
+            "Tracked file #{id} cannot be fixity checked: #{tracked_file.inspect}"
+    end
+  end
+
+  def check_duracloud!
+    if duracloud_checkable?
+      DuracloudCheck.call(self)
+    else
+      raise FileTracker::Error,
+            "Tracked file #{id} cannot be checked in DuraCloud: #{tracked_file.inspect}"
     end
   end
 

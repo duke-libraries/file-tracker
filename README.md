@@ -22,6 +22,7 @@ MySQL database creation:
 ## Job queues
 
     inventory       Recursive directory inventory
+    duracloud       DuraCloud replication checks
     batch           Batch jobs which queue up other jobs (should only need 1 worker)
     fixity          Fixity checks
     fixity_large    Fixity checks on large files
@@ -32,13 +33,19 @@ Resque pool config is in the usual location `config/resque-pool.yml`.
 
 ## Configuration
 
+### Environment
+
 Set variables in `config/application.yml`.  See the `figaro` gem documentation for details.
 
-- `FILE_TRACKER_DB_USER` - Database user name (default: `file_tracker`)
-- `FILE_TRACKER_DB_PASS` - Database user password (required for production)
-- `LARGE_FILE_THRESHHOLD` - Integer byte size, above which a file is considered "large" for purposes of job queueing (default: 1000000000 [= 1G]).
-- `FIXITY_CHECK_PERIOD` - Integer number of days after which fixity should be re-checked (default: 60).
-- `BATCH_FIXITY_CHECK_LIMIT` - Integer default maximum number of files to submit for fixity checking in a single batch (default: 100000).
+    FILE_TRACKER_DB_USER       Database user name (default: `file_tracker`)
+    FILE_TRACKER_DB_PASS       Database user password (required for production)
+    LARGE_FILE_THRESHHOLD      Integer byte size, above which a file is considered "large" for purposes of job queueing (default: 1000000000 [= 1G]).
+    FIXITY_CHECK_PERIOD        Integer number of days after which fixity should be re-checked (default: 60).
+    BATCH_FIXITY_CHECK_LIMIT   Integer default maximum number of files to submit for fixity checking in a single batch (default: 100000).
+
+See [duracloud-client](https://github.com/duracloud/duracloud-ruby-client) documentation for detailed information on configuration of DuraCloud settings.
+
+### i18n
 
 See `config/locales/en.yml` for i18n keys.
 

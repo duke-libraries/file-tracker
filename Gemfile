@@ -13,6 +13,7 @@ gem 'figaro'
 gem 'devise'
 gem 'omniauth-shibboleth'
 gem 'cancancan'
+gem 'duracloud-client'
 
 gem 'redis', '~> 3.0'
 gem 'resque', '~> 1.27'
@@ -26,6 +27,7 @@ group :development, :test do
   gem 'byebug'
   gem 'rspec-rails'
   gem 'rspec-its'
+  gem 'webmock'
 end
 
 group :production do

@@ -7,6 +7,14 @@ RSpec.describe TrackedFile do
   let(:md5) { "57a88467c003f53d316a92e8896833b0" }
   let(:size) { 410226 }
 
+  describe "tracked_directory" do
+    subject { described_class.new(path: path) }
+    specify {
+      dir = TrackedDirectory.create!(path: fixture_path)
+      expect(subject.tracked_directory).to eq dir
+    }
+  end
+
   describe "create" do
     describe "size calculation" do
       describe "when size is provided" do
@@ -262,12 +270,36 @@ RSpec.describe TrackedFile do
     end
   end
 
+  describe "duracloud" do
+    before { TrackedDirectory.create!(path: fixture_path, duracloud_space: 'foo') }
+    subject { described_class.new(path: path) }
+    it { is_expected.to_not be_duracloud_checkable }
+    describe "new record with an MD5" do
+      before { subject.md5 = md5 }
+      it { is_expected.to_not be_duracloud_checkable }
+      describe "after persisting" do
+        before do
+          subject.save!
+          subject.reload
+        end
+        it { is_expected.to be_duracloud_checkable }
+        describe "and status is not OK" do
+          before do
+            subject.modified!
+            subject.save!
+          end
+          it { is_expected.to_not be_duracloud_checkable }
+        end
+      end
+    end
+  end
+
   describe "fixity checking boolean methods" do
     subject { described_class.new(path: path) }
     describe "fixity_checkable?" do
       it { is_expected.to_not be_fixity_checkable }
       describe "new record with a SHA1" do
-        before { subject.sha1 = "37781031df4573b90ef045889b7da0ab2655bf74" }
+        before { subject.sha1 = sha1 }
         it { is_expected.to_not be_fixity_checkable }
       end
       describe "persisted, after SHA1 generation" do
@@ -468,7 +500,8 @@ RSpec.describe TrackedFile do
       end
     end
     describe "when missing" do
-      let(:file) { Tempfile.create }
+      let(:dir) { Dir.mktmpdir }
+      let(:file) { Tempfile.create("", dir) }
       let(:path) { file.path }
       before do
         file.binmode
@@ -536,6 +569,39 @@ RSpec.describe TrackedFile do
       describe "when size > large file threshhold" do
         let(:size) { 300 }
         it { is_expected.to be_large }
+      end
+    end
+  end
+
+  describe "duracloud checking" do
+    before { TrackedDirectory.create!(path: fixture_path, duracloud_space: 'foo') }
+    subject { described_class.create!(path: path, md5: md5) }
+    it "sets the duracloud_checked_at date/time" do
+      allow(Duracloud::Content).to receive(:exist?).with(space_id: 'foo', content_id: 'nypl.jpg', md5: md5) { true }
+      expect { subject.check_duracloud!; subject.reload }.to change(subject, :duracloud_checked_at).from(nil)
+    end
+    describe "when the content has been replicated" do
+      before do
+        allow(Duracloud::Content).to receive(:exist?).with(space_id: 'foo', content_id: 'nypl.jpg', md5: md5) { true }
+      end
+      it "sets the status to OK" do
+        expect { subject.check_duracloud!; subject.reload }.to change(subject, :duracloud_status).to(0)
+      end
+    end
+    describe "when the content has not been replicated" do
+      before do
+        allow(Duracloud::Content).to receive(:exist?).with(space_id: 'foo', content_id: 'nypl.jpg', md5: md5) { false }
+      end
+      it "sets the status to MISSING" do
+        expect { subject.check_duracloud!; subject.reload }.to change(subject, :duracloud_status).to(2)
+      end
+    end
+    describe "when the DuraCloud replica is in conflict with the local resource" do
+      before do
+        allow(Duracloud::Content).to receive(:exist?).with(space_id: 'foo', content_id: 'nypl.jpg', md5: md5).and_raise(Duracloud::MessageDigestError)
+      end
+      it "sets the status to MODIFIED" do
+        expect { subject.check_duracloud!; subject.reload }.to change(subject, :duracloud_status).to(1)
       end
     end
   end

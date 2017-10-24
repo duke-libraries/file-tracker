@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171013133839) do
+ActiveRecord::Schema.define(version: 20171023160244) do
 
   create_table "fixity_checks", force: :cascade do |t|
     t.string "sha1"
@@ -51,6 +51,8 @@ ActiveRecord::Schema.define(version: 20171013133839) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "title"
+    t.string "duracloud_space"
+    t.datetime "duracloud_checked_at"
   end
 
   create_table "tracked_files", force: :cascade do |t|
@@ -62,6 +64,8 @@ ActiveRecord::Schema.define(version: 20171013133839) do
     t.integer "status", limit: 1, default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "duracloud_status", limit: 1, default: -1, null: false
+    t.datetime "duracloud_checked_at"
     t.index ["created_at"], name: "index_tracked_files_on_created_at"
     t.index ["fixity_checked_at"], name: "index_tracked_files_on_fixity_checked_at"
     t.index ["path"], name: "index_tracked_files_on_path"

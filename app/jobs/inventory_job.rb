@@ -1,6 +1,4 @@
-class InventoryJob < ApplicationJob
-
-  self.queue = :batch
+class InventoryJob < BatchJob
 
   def self.perform
     TrackedDirectory.all.each(&:track!)

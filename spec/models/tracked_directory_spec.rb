@@ -5,7 +5,7 @@ RSpec.describe TrackedDirectory do
   describe "file tracking" do
     let(:path) { fixture_path }
     subject { described_class.create!(path: path) }
-
+    before { subject.track! }
     specify {
       file = subject.tracked_files.first
       expect(file.size).to eq 410226
