@@ -29,7 +29,7 @@ RSpec.describe DuracloudCheck do
         expect(check.status).to eq 0
         check.tracked_file.reload
         expect(check.tracked_file.duracloud_status).to eq 0
-        expect(check.tracked_file.duracloud_checked_at).to eq check.checked_at
+        expect(check.tracked_file.duracloud_checked_at).to_not be_nil
       end
     end
     describe "and the file is chunked" do
@@ -79,7 +79,7 @@ RSpec.describe DuracloudCheck do
         expect(check.status).to eq 0
         check.tracked_file.reload
         expect(check.tracked_file.duracloud_status).to eq 0
-        expect(check.tracked_file.duracloud_checked_at).to eq check.checked_at
+        expect(check.tracked_file.duracloud_checked_at).to_not be_nil
       end
     end
   end
@@ -94,7 +94,7 @@ RSpec.describe DuracloudCheck do
       expect(check.status).to eq 1
       check.tracked_file.reload
       expect(check.tracked_file.duracloud_status).to eq 1
-      expect(check.tracked_file.duracloud_checked_at).to eq check.checked_at
+      expect(check.tracked_file.duracloud_checked_at).to_not be_nil
     end
   end
 
@@ -110,7 +110,7 @@ RSpec.describe DuracloudCheck do
       expect(check.status).to eq 2
       check.tracked_file.reload
       expect(check.tracked_file.duracloud_status).to eq 2
-      expect(check.tracked_file.duracloud_checked_at).to eq check.checked_at
+      expect(check.tracked_file.duracloud_checked_at).to_not be_nil
     end
   end
 
