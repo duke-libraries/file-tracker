@@ -55,6 +55,12 @@ EOS
     puts "Batch fixity check job queued."
   end
 
+  desc "Run the batch DuraCloud check routine."
+  task :duracloud => :environment do
+    Resque.enqueue(BatchDuracloudCheckJob)
+    puts "Batch DuraCloud check job queued."
+  end
+
   namespace :queues do
     desc "Print the status of the QueueManager."
     task :status => :environment do

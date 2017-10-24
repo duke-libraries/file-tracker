@@ -35,6 +35,12 @@ module TrackedFileAdmin
         field :fixity_checked_at do
           date_format :long
         end
+        field :duracloud_status do
+          pretty_value { I18n.t("duracloud_check.status.#{value}") }
+        end
+        field :duracloud_checked_at do
+          date_format :long
+        end
         field :md5
         field :sha1
         field :size, :byte_size do

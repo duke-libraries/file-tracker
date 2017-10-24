@@ -21,6 +21,7 @@ module TrackedDirectoryAdmin
         field :id
         field :title
         field :path
+        field :duracloud_space
         field :count
         field :size, :byte_size do
           pretty_size
@@ -34,10 +35,14 @@ module TrackedDirectoryAdmin
         field :tracked_at do
           date_format :long
         end
+        field :duracloud_checked_at do
+          date_format :long
+        end
       end
 
       edit do
         field :title
+        field :duracloud_space
       end
     end
   end
