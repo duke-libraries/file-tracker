@@ -27,6 +27,7 @@ group :development, :test do
   gem 'byebug'
   gem 'rspec-rails'
   gem 'rspec-its'
+  gem 'webmock'
 end
 
 group :production do

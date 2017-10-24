@@ -18,7 +18,9 @@ class DuracloudCheck
   after_check :update_tracked_file
 
   def self.call(tracked_file)
-    new(tracked_file: tracked_file).check!
+    new(tracked_file: tracked_file).tap do |duracloud_check|
+      duracloud_check.check!
+    end
   end
 
   def check!
