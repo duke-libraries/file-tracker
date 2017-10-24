@@ -42,7 +42,7 @@ class DuracloudCheck
   end
 
   def update_tracked_file
-    TrackedFile.update(duracloud_status: status, duracloud_checked_at: checked_at)
+    tracked_file.update(duracloud_status: status, duracloud_checked_at: checked_at)
   end
 
   def space_id
