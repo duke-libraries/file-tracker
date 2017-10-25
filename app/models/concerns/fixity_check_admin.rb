@@ -3,17 +3,15 @@ module FixityCheckAdmin
 
   included do
     rails_admin do
-      # object_label_method { :path }
-
       list do
-        scopes [nil, :ok, :not_ok, :modified, :missing, :error]
+        scopes [ nil, :ok, :not_ok, :modified, :missing, :error ]
         field :id
         field :started_at do
           label { "Checked At" }
           date_format :short
         end
-        field :status, :status do
-          pretty_status
+        field :status do
+          pretty_value { I18n.t("file_tracker.status.#{value}") }
         end
         field :tracked_file
       end
@@ -27,13 +25,13 @@ module FixityCheckAdmin
         field :finished_at do
           date_format :long
         end
-        field :status, :status do
-          pretty_status
+        field :status do
+          pretty_value { I18n.t("file_tracker.status.#{value}") }
         end
         field :md5
         field :sha1
-        field :size, :byte_size do
-          pretty_size
+        field :size do
+          pretty_value { ActiveSupport::NumberHelper.number_to_human_size(value) }
         end
         field :message
       end

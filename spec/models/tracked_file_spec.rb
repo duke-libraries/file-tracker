@@ -148,75 +148,109 @@ RSpec.describe TrackedFile do
     end
   end
 
-  describe "class methods" do
-    describe ".track!" do
-      let(:dir) { Dir.mktmpdir }
-      let(:path1) { Tempfile.create("file-", dir).path }
-      let(:path2) { Tempfile.create("file-", dir).path }
-      let(:path3) { Tempfile.create("file-", dir).path }
-      before do
-        File.open(path1, "wb") { |f| f.write(SecureRandom.gen_random(1000)) }
-        described_class.create(path: path1, size: 1000)
-        File.open(path2, "wb") { |f| f.write(SecureRandom.gen_random(2000)) }
-        File.open(path3, "wb") { |f| f.write(SecureRandom.gen_random(3000)) }
-      end
-      after { FileUtils.remove_entry_secure(dir) }
-      it "checks the size of each previously tracked file path" do
-        expect_any_instance_of(described_class).to receive(:check_size!).once
-        described_class.track!(path1, path2, path3)
-      end
-      it "creates tracked files for new paths" do
-        expect { described_class.track!(path1, path2, path3) }.to change(TrackedFile, :count).by(2)
-      end
+  describe ".track!" do
+    let(:dir) { Dir.mktmpdir }
+    let(:path1) { Tempfile.create("file-", dir).path }
+    let(:path2) { Tempfile.create("file-", dir).path }
+    let(:path3) { Tempfile.create("file-", dir).path }
+    before do
+      File.open(path1, "wb") { |f| f.write(SecureRandom.gen_random(1000)) }
+      described_class.create(path: path1, size: 1000)
+      File.open(path2, "wb") { |f| f.write(SecureRandom.gen_random(2000)) }
+      File.open(path3, "wb") { |f| f.write(SecureRandom.gen_random(3000)) }
     end
-
-    describe "scopes" do
-      describe "not_ok" do
-        specify {
-          file = TrackedFile.create(path: path)
-          expect(TrackedFile.not_ok).not_to include file
-        }
-      end
-      describe "ok" do
-        specify {
-          file = TrackedFile.create(path: path)
-          file.status = FileTracker::Status::MODIFIED
-          file.save!
-          expect(TrackedFile.ok).not_to include file
-          file.status = FileTracker::Status::OK
-          file.save!
-          expect(TrackedFile.ok).to include file
-        }
-      end
-      describe "modified" do
-        specify {
-          file = TrackedFile.create(path: path)
-          expect(TrackedFile.modified).not_to include file
-          file.status = FileTracker::Status::MODIFIED
-          file.save!
-          expect(TrackedFile.modified).to include file
-        }
-      end
-      describe "missing" do
-        specify {
-          file = TrackedFile.create(path: path)
-          expect(TrackedFile.missing).not_to include file
-          file.status = FileTracker::Status::MISSING
-          file.save!
-          expect(TrackedFile.missing).to include file
-        }
-      end
-      describe "error" do
-        specify {
-          file = TrackedFile.create(path: path)
-          expect(TrackedFile.error).not_to include file
-          file.status = FileTracker::Status::ERROR
-          file.save!
-          expect(TrackedFile.error).to include file
-        }
-      end
+    after { FileUtils.remove_entry_secure(dir) }
+    it "checks the size of each previously tracked file path" do
+      expect_any_instance_of(described_class).to receive(:check_size!).once
+      described_class.track!(path1, path2, path3)
+    end
+    it "creates tracked files for new paths" do
+      expect { described_class.track!(path1, path2, path3) }.to change(TrackedFile, :count).by(2)
     end
   end
+
+  describe "scopes" do
+    describe "not_ok" do
+      specify {
+        file = TrackedFile.create(path: path)
+        expect(TrackedFile.not_ok).not_to include file
+      }
+    end
+    describe "ok" do
+      specify {
+        file = TrackedFile.create(path: path)
+        file.status = FileTracker::Status::MODIFIED
+        file.save!
+        expect(TrackedFile.ok).not_to include file
+        file.status = FileTracker::Status::OK
+        file.save!
+        expect(TrackedFile.ok).to include file
+      }
+    end
+    describe "modified" do
+      specify {
+        file = TrackedFile.create(path: path)
+        expect(TrackedFile.modified).not_to include file
+        file.status = FileTracker::Status::MODIFIED
+        file.save!
+        expect(TrackedFile.modified).to include file
+      }
+    end
+    describe "missing" do
+      specify {
+        file = TrackedFile.create(path: path)
+        expect(TrackedFile.missing).not_to include file
+        file.status = FileTracker::Status::MISSING
+        file.save!
+        expect(TrackedFile.missing).to include file
+      }
+    end
+    describe "error" do
+      specify {
+        file = TrackedFile.create(path: path)
+        expect(TrackedFile.error).not_to include file
+        file.status = FileTracker::Status::ERROR
+        file.save!
+        expect(TrackedFile.error).to include file
+      }
+    end
+    describe "duracloud" do
+      specify {
+        file = TrackedFile.create(path: path)
+        expect(TrackedFile.duracloud(:replicated)).not_to include file
+        file.duracloud_status = DuracloudCheck::REPLICATED
+        file.save!
+        expect(TrackedFile.duracloud(:replicated)).to include file
+      }
+    end
+    describe "duracloud_not_replicated" do
+      specify {
+        file = TrackedFile.create(path: path)
+        expect(TrackedFile.duracloud(:not_replicated)).not_to include file
+        file.duracloud_status = DuracloudCheck::NOT_REPLICATED
+        file.save!
+        expect(TrackedFile.duracloud(:not_replicated)).to include file
+      }
+    end
+    describe "duracloud_conflict" do
+      specify {
+        file = TrackedFile.create(path: path)
+        expect(TrackedFile.duracloud(:conflict)).not_to include file
+        file.duracloud_status = DuracloudCheck::CONFLICT
+        file.save!
+        expect(TrackedFile.duracloud(:conflict)).to include file
+      }
+    end
+    describe "duracloud_not_checked" do
+      specify {
+        file = TrackedFile.create(path: path)
+        expect(TrackedFile.duracloud(:not_checked)).to include file
+        file.duracloud_status = DuracloudCheck::REPLICATED
+        file.save!
+        expect(TrackedFile.duracloud(:not_checked)).not_to include file
+      }
+    end
+  end # scopes
 
   describe "status value methods" do
     subject { described_class.new(path: path) }

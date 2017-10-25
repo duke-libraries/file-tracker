@@ -15,6 +15,7 @@ class TrackedFile < ActiveRecord::Base
   after_save :generate_md5, if: :generate_md5?
 
   scope :large, ->{ where("size >= ?", FileTracker.large_file_threshhold) }
+  scope :duracloud, ->(v) { where(duracloud_status: DuracloudCheck.const_get(v.to_s.upcase)) }
 
   def self.check_fixity?
     ok.where("sha1 IS NOT NULL AND (fixity_checked_at IS NULL OR fixity_checked_at < ?)",
