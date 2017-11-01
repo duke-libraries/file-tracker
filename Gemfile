@@ -13,7 +13,7 @@ gem 'figaro'
 gem 'devise'
 gem 'omniauth-shibboleth'
 gem 'cancancan'
-gem 'duracloud-client', '~> 0.9.1'
+gem 'duracloud-client', '~> 0.10.0'
 
 gem 'redis', '~> 3.0'
 gem 'resque', '~> 1.27'
@@ -21,7 +21,6 @@ gem 'resque-web', require: 'resque_web'
 gem 'resque-pool'
 
 gem 'rails_admin', '~> 1.2'
-gem 'activerecord-import', '~> 0.19'
 
 group :development, :test do
   gem 'byebug'
