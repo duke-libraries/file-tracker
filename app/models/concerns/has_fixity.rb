@@ -2,6 +2,10 @@ require 'digest'
 
 module HasFixity
 
+  def retriable_io_errors
+    [ Errno::EAGAIN, Errno::EBADF, Errno::EIO ]
+  end
+
   def set_digest(digest)
     self.attributes = { digest => calculate_digest(digest) }
   end
@@ -19,12 +23,16 @@ module HasFixity
   end
 
   def calculate_size
-    RetryOnError.wrap { File.size(path) }
+    RetryOnError.wrap(retriable_io_errors, wait: 60) do
+      File.size(path)
+    end
   end
 
   def calculate_digest(digest)
     digest_class = Digest.const_get(digest.to_s.upcase)
-    RetryOnError.wrap { digest_class.file(path).hexdigest }
+    RetryOnError.wrap(retriable_io_errors, wait: 60) do
+      digest_class.file(path).hexdigest
+    end
   end
 
   def calculate_sha1
