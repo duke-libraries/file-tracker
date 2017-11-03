@@ -67,7 +67,7 @@ RSpec.describe FixityCheck do
           subject.check
         end
         it { is_expected.to be_modified }
-        its(:message) { is_expected.to eq "Expected SHA1 {#{sha1}}; actual SHA1 {#{new_sha1}}" }
+        its(:message) { is_expected.to eq "Expected SHA1 {#{sha1}}; actual SHA1 {#{new_sha1}}." }
       end
     end
     describe "when the size has changed" do
@@ -82,7 +82,7 @@ RSpec.describe FixityCheck do
       describe "after size check" do
         before { subject.check }
         it { is_expected.to be_modified }
-        its(:message) { is_expected.to eq "Expected size: #{size}; actual size: #{new_size}" }
+        its(:message) { is_expected.to eq "Expected size: #{size}; actual size: #{new_size}." }
       end
     end
     describe "when the file is missing" do
