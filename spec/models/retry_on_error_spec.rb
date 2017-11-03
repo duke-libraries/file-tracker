@@ -4,21 +4,12 @@ RSpec.describe RetryOnError do
 
   let(:path) { File.join(fixture_path, "nypl.jpg") }
   let(:block) { proc { File.size(path) } }
-
-  let(:config) do
-    {
-      "Errno::EAGAIN" => {"retries"=>3, "wait"=>0.1},
-      "Errno::EIO"    => {"retries"=>1, "wait"=>0.1}
-    }
-  end
-
-  before do
-    allow(described_class).to receive(:config) { config }
-  end
+  let(:exceptions) { [ Errno::EAGAIN, Errno::EIO ] }
+  subject { described_class.new(exceptions: exceptions, wait: 0.1) }
 
   describe "when the block does not raise an exception" do
     it "returns the value of the block" do
-      expect(described_class.wrap(&block)).to eq 410226
+      expect(subject.wrap(&block)).to eq 410226
     end
   end
 
@@ -28,16 +19,16 @@ RSpec.describe RetryOnError do
         allow(File).to receive(:size).with(path).and_raise(Errno::EAGAIN)
         expect(block).to receive(:call).and_call_original.exactly(4).times
         begin
-          described_class.wrap(&block)
+          subject.wrap(&block)
         rescue Errno::EAGAIN
         end
       end
     end
 
-    describe "and there is no matching error handler" do
+    describe "and the exception is not retriable" do
       it "raises the exception" do
         allow(File).to receive(:size).with(path).and_raise(Errno::EBADF)
-        expect { described_class.wrap(&block) }.to raise_error(Errno::EBADF)
+        expect { subject.wrap(&block) }.to raise_error(Errno::EBADF)
       end
     end
   end

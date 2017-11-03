@@ -23,8 +23,8 @@ module TrackedDirectoryAdmin
         field :path
         field :duracloud_space
         field :count
-        field :size, :byte_size do
-          pretty_size
+        field :size do
+          pretty_value { ActiveSupport::NumberHelper.number_to_human_size(value) }
         end
         field :created_at do
           date_format :long

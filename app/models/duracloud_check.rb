@@ -30,13 +30,13 @@ class DuracloudCheck
   end
 
   def check
-    if Duracloud::Content.exist?(space_id: space_id, content_id: content_id, md5: md5)
-      REPLICATED
-    else
-      NOT_REPLICATED
-    end
+    replicated? ? REPLICATED : NOT_REPLICATED
   rescue Duracloud::MessageDigestError => e
     CONFLICT
+  end
+
+  def replicated?
+    Duracloud::Content.exist?(space_id: space_id, content_id: content_id, md5: md5)
   end
 
   def set_checked_at

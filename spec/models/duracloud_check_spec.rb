@@ -9,13 +9,10 @@ RSpec.describe DuracloudCheck do
 
   before do
     TrackedDirectory.create!(path: fixture_path, duracloud_space: 'foo')
-
-    Duracloud::Client.configure do |config|
-      config.host = "example.com"
-      config.user = "testuser"
-      config.password = "testpass"
-      config.silence_logging!
-    end
+    allow(Duracloud).to receive(:host) { "example.com" }
+    allow(Duracloud).to receive(:user) { "testuser" }
+    allow(Duracloud).to receive(:password) { "testpass" }
+    Duracloud.silence_logging!
   end
 
   describe "when the file has been replicated" do

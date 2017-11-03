@@ -1,34 +1,33 @@
 class RetryOnError
+  include ActiveModel::Model
 
-  class << self
-    attr_writer :config
+  class_attribute :attempts, :wait
+  self.attempts = 3
+  self.wait = 5
 
-    def config_file
-      File.join(Rails.root, "config", "retry_on_error.yml")
-    end
+  attr_accessor :exceptions
 
-    def config
-      @config ||= load_config
-    end
+  validates_presence_of :exceptions
+  validates_numericality_of :attempts, only_integer: true, greater_than: 0
+  validates_numericality_of :wait, greater_than_or_equal_to: 0
 
-    def load_config
-      YAML.load_file(config_file) rescue {}
-    end
+  def self.wrap(exceptions, **options, &block)
+    wrapper = new(options.merge(exceptions: exceptions))
+    wrapper.wrap(&block)
+  end
 
-    def wrap(&block)
-      retries = 0
-      begin
-        block.call
-      rescue Exception => e
-        if handler = config[e.class.to_s]
-          if retries < handler["retries"]
-            retries += 1
-            sleep handler["wait"]
-            retry
-          end
-        end
-        raise
+  def wrap(&block)
+    validate!
+    retries = 0
+    begin
+      block.call
+    rescue *exceptions => e
+      if retries < attempts
+        retries += 1
+        sleep wait
+        retry
       end
+      raise
     end
   end
 
