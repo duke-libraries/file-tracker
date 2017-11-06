@@ -93,8 +93,8 @@ class FixityCheck < ActiveRecord::Base
   def track_change
     # We probably aren't concerned about creating duplicate changes
     # because, under normal operation, a fixity check would not be
-    # execute on a file having a pending change (i.e., not
-    # current OK).
+    # executed on a file having a pending change (i.e., not
+    # currently OK).
     TrackedChange.create!(tracked_file: tracked_file,
                           change_type: status,
                           size: size,

@@ -41,6 +41,9 @@ module TrackedDirectoryAdmin
       end
 
       edit do
+        field :path do
+          read_only { bindings[:object].persisted? }
+        end
         field :title
         field :duracloud_space
       end
