@@ -26,5 +26,3 @@ module FileTracker
     # -- all .rb files in that directory are automatically loaded.
   end
 end
-
-require 'file_tracker'
