@@ -13,7 +13,7 @@ gem 'figaro'
 gem 'devise'
 gem 'omniauth-shibboleth'
 gem 'cancancan'
-gem 'duracloud-client', '~> 0.10.1'
+gem 'duracloud-client', '~> 0.10.2'
 
 gem 'redis', '~> 3.0'
 gem 'resque', '~> 1.27'
