@@ -1,4 +1,4 @@
-class DuracloudCheckJob < ApplicationJob
+class DuracloudCheckJob < DuracloudJob
 
   self.queue = :duracloud
 

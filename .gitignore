@@ -27,4 +27,10 @@
 # Resque
 /config/resque-pool.yml
 
+# Ad hoc jobs
+/jobs
+
 /public/assets
+
+# Ad hoc scripts
+/scripts

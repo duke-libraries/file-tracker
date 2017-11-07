@@ -640,4 +640,34 @@ RSpec.describe TrackedFile do
     end
   end
 
+  describe "resetting attributes" do
+    subject { described_class.new(path: path, sha1: sha1, md5: md5, size: size, status: 1) }
+    describe "#reset!" do
+      it "resets the SHA1" do
+        expect { subject.reset! }.to change(subject, :sha1).to(nil)
+      end
+      it "resets the MD5" do
+        expect { subject.reset! }.to change(subject, :md5).to(nil)
+      end
+      it "resets the size" do
+        expect { subject.reset! }.to change(subject, :size).to(nil)
+      end
+      it "resets the status" do
+        expect { subject.reset! }.to change(subject, :status).to(0)
+      end
+    end
+    describe "after creation" do
+      before do
+        subject.duracloud_status = 2
+        subject.duracloud_checked_at = DateTime.now
+        subject.save!
+      end
+      describe "when the MD5 changes" do
+        it "resets the DuraCloud attributes" do
+          expect { subject.md5 = nil; subject.save! }.to change(subject, :duracloud_status).from(2).to(-1)
+        end
+      end
+    end
+  end
+
 end

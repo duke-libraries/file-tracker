@@ -10,7 +10,8 @@ class TrackedFile < ActiveRecord::Base
   validates :path, file_exists: true, readable: true, uniqueness: true, on: :create
   validates_inclusion_of :status, in: FileTracker::Status.values
 
-  before_create :set_size, unless: :size? # FIXME ?
+  before_save :set_size, unless: :size?
+  before_save :reset_duracloud_attributes, if: [:persisted?, :md5_changed?]
   after_save :generate_sha1, if: :generate_sha1?
   after_save :generate_md5, if: :generate_md5?
 
@@ -172,7 +173,19 @@ class TrackedFile < ActiveRecord::Base
                                       message: exception.message)
   end
 
+  def reset!
+    reset_fixity
+    ok!
+  end
+
   private
+
+  def reset_duracloud_attributes
+    assign_attributes(
+      duracloud_status: DuracloudCheck::NOT_CHECKED,
+      duracloud_checked_at: nil
+    )
+  end
 
   def commit_digest(digest)
     if send("#{digest}_changed?")

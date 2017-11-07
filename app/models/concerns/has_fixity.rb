@@ -4,6 +4,10 @@ module HasFixity
 
   RETRIABLE_IO_ERRORS = [ Errno::EAGAIN, Errno::EBADF, Errno::EIO, Errno::EADDRNOTAVAIL ]
 
+  def reset_fixity
+    assign_attributes(sha1: nil, md5: nil, size: nil)
+  end
+
   def set_digest(digest)
     self.attributes = { digest => calculate_digest(digest) }
   end
