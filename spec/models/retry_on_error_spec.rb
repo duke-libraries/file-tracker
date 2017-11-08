@@ -5,7 +5,7 @@ RSpec.describe RetryOnError do
   let(:path) { File.join(fixture_path, "nypl.jpg") }
   let(:block) { proc { File.size(path) } }
   let(:exceptions) { [ Errno::EAGAIN, Errno::EIO ] }
-  subject { described_class.new(exceptions: exceptions, wait: 0.1) }
+  subject { described_class.new(exceptions: exceptions, wait: 0.1, backoff: 1) }
 
   describe "when the block does not raise an exception" do
     it "returns the value of the block" do
