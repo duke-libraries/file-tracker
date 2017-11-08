@@ -1,7 +1,7 @@
 class BatchDuracloudCheckJob < BatchJob
 
-  def self.perform(only_status = nil)
-    only_status ? check_by_status(only_status) : check_all
+  def self.perform(status = nil)
+    status ? check_by_status(status) : check_all
   end
 
   def self.check_all
