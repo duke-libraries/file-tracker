@@ -39,9 +39,18 @@ class TrackedDirectory < ActiveRecord::Base
 
   def track!
     self.tracked_at = DateTime.now
-    Resque.enqueue(TrackDirectoryJob, path)
+    track
     save!
     self
+  end
+
+  def track
+    IO.popen(["find", path, "-type", "f"]) do |io|
+      while io.gets
+        path = $_.chomp
+        TrackedFile.track!(path)
+      end
+    end
   end
 
   private
