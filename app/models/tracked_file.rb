@@ -29,7 +29,7 @@ class TrackedFile < ActiveRecord::Base
 
   def self.under(path)
     return all if path.blank? || path == "/"
-    value = File.realpath(path)
+    value = path.sub(/\/\z/, "") # remove trailing slash
     where("path LIKE ?", "#{value}/%")
   end
 
