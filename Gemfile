@@ -35,5 +35,7 @@ group :production do
 end
 
 group :development do
-  gem 'listen', '>= 3.0.5', '< 3.2'
+  # For compatibility with Ruby 2.2.2.
+  # See https://github.com/e2/ruby_dep.
+  gem 'listen', '~> 3.0.8'
 end
