@@ -424,7 +424,7 @@ RSpec.describe TrackedFile do
   end
 
   describe "validation" do
-    let(:file) { Tempfile.create }
+    let(:file) { Tempfile.create("foo") }
     let(:path) { file.path }
     after { File.unlink(path) if File.exist?(path) }
     subject { described_class.new(path: path) }
@@ -535,7 +535,7 @@ RSpec.describe TrackedFile do
     end
     describe "when missing" do
       let(:dir) { Dir.mktmpdir }
-      let(:file) { Tempfile.create("", dir) }
+      let(:file) { Tempfile.create("foo", dir) }
       let(:path) { file.path }
       before do
         file.binmode
@@ -558,7 +558,7 @@ RSpec.describe TrackedFile do
       end
     end
     describe "when file is not readable" do
-      let(:file) { Tempfile.create }
+      let(:file) { Tempfile.create("foo") }
       let(:path) { file.path }
       before do
         file.binmode
@@ -586,7 +586,7 @@ RSpec.describe TrackedFile do
       it { is_expected.to_not be_large }
     end
     describe "when size is not nil" do
-      let(:path) { Tempfile.create.path }
+      let(:path) { Tempfile.create("foo").path }
       subject { described_class.new(path: path, size: size) }
       before do
         File.open(path, "wb") { |f| f.write(SecureRandom.gen_random(size)) }
