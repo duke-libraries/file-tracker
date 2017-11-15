@@ -86,7 +86,7 @@ RSpec.describe FixityCheck do
       end
     end
     describe "when the file is missing" do
-      let(:file) { Tempfile.create }
+      let(:file) { Tempfile.create("foo") }
       let(:tracked_file) { TrackedFile.create(path: file.path) }
       before do
         file.binmode
@@ -100,7 +100,7 @@ RSpec.describe FixityCheck do
       end
     end
     describe "when the user lacks permission to read the file" do
-      let(:file) { Tempfile.create }
+      let(:file) { Tempfile.create("foo") }
       let(:tracked_file) { TrackedFile.create(path: file.path) }
       before do
         file.binmode
