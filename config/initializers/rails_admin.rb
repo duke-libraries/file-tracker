@@ -16,12 +16,12 @@ RailsAdmin.config do |config|
       only %w( TrackedDirectory )
     end
     export
-    # bulk_delete
+    bulk_delete
     show
     edit do
       only %w( TrackedDirectory User )
     end
-    # delete
+    delete
     show_in_app
   end
 
