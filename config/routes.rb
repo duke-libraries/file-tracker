@@ -13,4 +13,10 @@ Rails.application.routes.draw do
 
   root to: "rails_admin/main#dashboard"
 
+  namespace :api, defaults: {format: 'json'} do
+    namespace :v1 do
+      resources :tracked_files, only: [:create, :show], constraints: { id: /.*/ }
+    end
+  end
+
 end
