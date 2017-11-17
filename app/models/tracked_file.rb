@@ -7,7 +7,7 @@ class TrackedFile < ActiveRecord::Base
   has_many :fixity_checks, dependent: :destroy
   has_many :tracked_changes, dependent: :destroy
 
-  validates :path, file_exists: true, readable: true, uniqueness: true, on: :create
+  validates :path, file_exists: true, file_not_empty: true, readable: true, uniqueness: true, on: :create
   validates_inclusion_of :status, in: FileTracker::Status.values
 
   before_save :set_size, unless: :size?

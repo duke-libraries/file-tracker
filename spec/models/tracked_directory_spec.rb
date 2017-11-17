@@ -6,11 +6,14 @@ RSpec.describe TrackedDirectory do
     let(:path) { fixture_path }
     subject { described_class.create!(path: path) }
     before { subject.track! }
-    specify {
-      file = subject.tracked_files.first
-      expect(file.size).to eq 410226
-      expect(file.path).to eq File.join(path, "nypl.jpg")
-    }
+    it "tracks files" do
+      file = File.join(subject.path, "nypl.jpg")
+      expect(subject.tracked_files.pluck(:path)).to include(file)
+    end
+    it "excludes empty files" do
+      empty_file = File.join(subject.path, "empty.txt")
+      expect(subject.tracked_files.pluck(:path)).not_to include(empty_file)
+    end
   end
 
   describe "validation" do

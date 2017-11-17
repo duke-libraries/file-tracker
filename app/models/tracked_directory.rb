@@ -45,7 +45,7 @@ class TrackedDirectory < ActiveRecord::Base
   end
 
   def track
-    IO.popen(["find", path, "-type", "f"]) do |io|
+    IO.popen(["find", path, "-type", "f", "-not", "-empty"]) do |io|
       while io.gets
         path = $_.chomp
         TrackedFile.track!(path)

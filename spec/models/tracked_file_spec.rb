@@ -424,22 +424,43 @@ RSpec.describe TrackedFile do
   end
 
   describe "validation" do
-    let(:file) { Tempfile.create("foo") }
-    let(:path) { file.path }
-    after { File.unlink(path) if File.exist?(path) }
     subject { described_class.new(path: path) }
-    it { is_expected.to be_valid }
-    describe "existence violation" do
-      before { File.unlink(path) }
+    describe "with a directory path" do
+      let(:path) { fixture_path }
       it { is_expected.to be_invalid }
     end
-    describe "readable violation" do
-      before { FileUtils.chmod "u-r", path }
+    describe "with a non-existent path" do
+      let(:path) { File.join(Dir.tmpdir, Dir::Tmpname.make_tmpname("foo", nil)) }
       it { is_expected.to be_invalid }
     end
-    describe "uniqueness violation" do
-      before { described_class.create!(path: path) }
+    describe "with a symlink" do
+      let(:target) { File.join(fixture_path, "nypl.jpg") }
+      let(:dir) { Dir.mktmpdir }
+      let(:path) { File.join(dir, "nypl.jpg") }
+      before { FileUtils.ln_s(target, path) }
+      after { FileUtils.rm_r(dir) if Dir.exist?(dir) }
       it { is_expected.to be_invalid }
+    end
+    describe "with an existing file" do
+      let(:file) { Tempfile.create("foo") }
+      let(:path) { file.path }
+      before do
+        File.open(path, "wb") { |f| f.write(SecureRandom.gen_random(100)) }
+      end
+      after { File.unlink(path) if File.exist?(path) }
+      it { is_expected.to be_valid }
+      describe "that is not readable" do
+        before { FileUtils.chmod "u-r", path }
+        it { is_expected.to be_invalid }
+      end
+      describe "that is not unique" do
+        before { described_class.create!(path: path) }
+        it { is_expected.to be_invalid }
+      end
+      describe "that is empty" do
+        before { File.truncate(path, 0) }
+        it { is_expected.to be_invalid }
+      end
     end
   end
 
