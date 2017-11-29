@@ -1,10 +1,15 @@
 require 'file_tracker'
 
 namespace :file_tracker do
-  desc "Inventory tracked directories."
-  task :inventory => :environment do
-    Resque.enqueue(InventoryJob)
-    puts "Inventory job queued."
+  desc "Inventory tracked directory by ID, or all tracked directories (no `id`)."
+  task :inventory, [:id] => :environment do |t, args|
+    if args[:id]
+      Resque.enqueue(TrackDirectoryJob, args[:id])
+      puts "TrackDirectoryJob enqueued (id = #{args[:id]})."
+    else
+      Resque.enqueue(InventoryJob)
+      puts "InventoryJob enqueued."
+    end
   end
 
   desc "Print application version."
@@ -52,7 +57,7 @@ EOS
   desc "Run the batch fixity check routine, optionally overriding the default limit (#{FileTracker.batch_fixity_check_limit})."
   task :fixity, [:max] => :environment do |t, args|
     Resque.enqueue(BatchFixityCheckJob, args[:max])
-    puts "Batch fixity check job queued."
+    puts "BatchFixityCheckJob enqueued."
   end
 
   task :duracloud, [:only_status] do |t, args|
@@ -65,7 +70,7 @@ EOS
     desc "Run the batch DuraCloud check routine, optionally limiting tracked_files by duracloud_status."
     task :check, [:status] => :environment do |t, args|
       Resque.enqueue(BatchDuracloudCheckJob, args[:status])
-      print "Batch DuraCloud check job queued"
+      print "BatchDuracloudCheckJob enqueued"
       print " for status #{args[:only_status]}" if args[:status]
       puts "."
     end
