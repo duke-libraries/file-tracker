@@ -10,27 +10,15 @@ module Api::V1
 
     describe "show" do
       let(:file) { TrackedFile.create!(path: path, sha1: sha1, md5: md5, size: size) }
-      describe "GET by id" do
+      describe "GET" do
         it "succeeds" do
           get :show, params: { id: file, format: "json" }
           expect(response).to be_success
         end
       end
-      describe "HEAD by id" do
+      describe "HEAD" do
         it "succeeds" do
           head :show, params: { id: file, format: "json" }
-          expect(response).to be_success
-        end
-      end
-      describe "GET by path" do
-        it "succeeds" do
-          get :show, params: { id: file.path, format: "json" }
-          expect(response).to be_success
-        end
-      end
-      describe "HEAD by path" do
-        it "succeeds" do
-          head :show, params: { id: file.path, format: "json" }
           expect(response).to be_success
         end
       end
