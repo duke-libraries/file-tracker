@@ -1,13 +1,6 @@
 module Api::V1
   class TrackedFilesController < ::ApplicationController
 
-    respond_to :json
-    protect_from_forgery with: :null_session
-
-    rescue_from ActiveRecord::RecordNotFound do |exc|
-      render :nothing, status: 404
-    end
-
     # POST /
     # Query params: path, sha1, size
     def create
@@ -19,18 +12,10 @@ module Api::V1
       end
     end
 
-    # GET /*id
-    # HEAD /*id
-    # :id may be a TrackedFile id or path.
+    # GET /:id
+    # HEAD /:id
     def show
-      id = params[:id].to_i
-      tracked_file = if id == 0
-                       puts params[:id]
-                       TrackedFile.find_by!(path: params[:id])
-                     else
-                       TrackedFile.find(id)
-                     end
-      render json: tracked_file
+      render json: TrackedFile.find(params.require(:id))
     end
 
     private
