@@ -66,6 +66,14 @@ EOS
     Rake::Task["file_tracker:duracloud:check"].invoke(*args)
   end
 
+  namespace :directory do
+    desc "Print a directory summary report to STDOUT for the provided path."
+    task :summary, [:path] => :environment do |t, args|
+      summary = DirectorySummary.new(path: args[:path])
+      puts summary.csv
+    end
+  end
+
   namespace :duracloud do
     desc "Run the batch DuraCloud check routine, optionally limiting tracked_files by duracloud_status."
     task :check, [:status] => :environment do |t, args|
