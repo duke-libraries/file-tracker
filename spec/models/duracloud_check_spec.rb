@@ -2,13 +2,13 @@ require 'rails_helper'
 
 RSpec.describe DuracloudCheck do
 
-  let(:file) { TrackedFile.create!(path: path, md5: md5, sha1: sha1) }
+  let(:dir)  { TrackedDirectory.create(path: fixture_path, duracloud_space: 'foo') }
+  let(:file) { TrackedFile.create!(tracked_directory: dir, path: path, md5: md5, sha1: sha1) }
   let(:sha1) { "37781031df4573b90ef045889b7da0ab2655bf74" }
   let(:md5) { "57a88467c003f53d316a92e8896833b0" }
   let(:path) { File.join(fixture_path, "nypl.jpg") }
 
   before do
-    TrackedDirectory.create!(path: fixture_path, duracloud_space: 'foo')
     allow(Duracloud).to receive(:host) { "example.com" }
     allow(Duracloud).to receive(:user) { "testuser" }
     allow(Duracloud).to receive(:password) { "testpass" }

@@ -100,8 +100,9 @@ RSpec.describe FixityCheck do
       end
     end
     describe "when the user lacks permission to read the file" do
-      let(:file) { Tempfile.create("foo") }
-      let(:tracked_file) { TrackedFile.create(path: file.path) }
+      let(:dir) { TrackedDirectory.create(path: Dir.mktmpdir) }
+      let(:file) { Tempfile.create("foo", dir.path) }
+      let(:tracked_file) { TrackedFile.create(tracked_directory: dir, path: file.path) }
       before do
         file.binmode
         file.write File.read(File.join(fixture_path, "nypl.jpg"))
@@ -109,7 +110,7 @@ RSpec.describe FixityCheck do
         tracked_file
         FileUtils.chmod "u-r", file.path
       end
-      after { File.unlink(file.path) }
+      after { FileUtils.rm_r(dir.path) if Dir.exist?(dir.path) }
       it "sets the status to ERROR" do
         expect { subject.check }.to change(subject, :status).to(FileTracker::Status::ERROR)
       end

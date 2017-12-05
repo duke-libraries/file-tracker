@@ -1,7 +1,9 @@
 class TrackedDirectory < ActiveRecord::Base
 
+  include HasPathname
   include TrackedDirectoryAdmin
 
+  has_many :tracked_files, dependent: :destroy
   before_validation :normalize_path!
   validates :path, directory_exists: true, readable: true, uniqueness: true
 
@@ -9,7 +11,8 @@ class TrackedDirectory < ActiveRecord::Base
     path
   end
 
-  def tracked_files
+  # @deprecated Use {#tracked_files} instead.
+  def _tracked_files
     TrackedFile.under(path)
   end
 
@@ -48,7 +51,7 @@ class TrackedDirectory < ActiveRecord::Base
     IO.popen(["find", path, "-type", "f", "-not", "-empty"]) do |io|
       while io.gets
         path = $_.chomp
-        TrackedFile.track!(path)
+        TrackedFile.track!(self, path)
       end
     end
   end
