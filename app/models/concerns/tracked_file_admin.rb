@@ -8,6 +8,7 @@ module TrackedFileAdmin
       list do
         scopes [ nil, :ok, :not_ok, :modified, :missing, :error ]
         field :id
+        field :tracked_directory
         field :created_at do
           date_format :short
         end
@@ -26,6 +27,7 @@ module TrackedFileAdmin
 
       show do
         field :id
+        field :tracked_directory
         field :path
         field :created_at do
           date_format :long

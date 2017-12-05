@@ -2,10 +2,12 @@ class TrackedFile < ActiveRecord::Base
 
   include HasFixity
   include HasStatus
+  include HasPathname
   include TrackedFileAdmin
 
   has_many :fixity_checks, dependent: :destroy
   has_many :tracked_changes, dependent: :destroy
+  belongs_to :tracked_directory
 
   validates :path, file_exists: true, file_not_empty: true, readable: true, uniqueness: true, on: :create
   validates_inclusion_of :status, in: FileTracker::Status.values
@@ -23,8 +25,8 @@ class TrackedFile < ActiveRecord::Base
              fixity_check_cutoff_date)
   end
 
-  def self.track!(*paths)
-    paths.each { |path| find_or_initialize_by(path: path).track! }
+  def self.track!(dir, *paths)
+    paths.each { |path| find_or_initialize_by(tracked_directory: dir, path: path).track! }
   end
 
   def self.under(path)
@@ -41,7 +43,12 @@ class TrackedFile < ActiveRecord::Base
     path
   end
 
-  def tracked_directory
+  def relpath
+    @relpath ||= pathname.relative_path_from(tracked_directory.pathname).to_s
+  end
+
+  # @deprecated Use {#tracked_directory} instead.
+  def _tracked_directory
     TrackedDirectory.where("path = substr(?, 1, length(path))", path).first
   end
 

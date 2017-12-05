@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171103203225) do
+ActiveRecord::Schema.define(version: 20171204164311) do
 
   create_table "duracloud_manifest_entries", force: :cascade do |t|
     t.string "space_id", null: false
@@ -74,6 +74,7 @@ ActiveRecord::Schema.define(version: 20171103203225) do
     t.datetime "updated_at", null: false
     t.integer "duracloud_status", limit: 1, default: -1, null: false
     t.datetime "duracloud_checked_at"
+    t.integer "tracked_directory_id"
     t.index ["created_at"], name: "index_tracked_files_on_created_at"
     t.index ["fixity_checked_at"], name: "index_tracked_files_on_fixity_checked_at"
     t.index ["md5"], name: "index_tracked_files_on_md5"
@@ -81,6 +82,7 @@ ActiveRecord::Schema.define(version: 20171103203225) do
     t.index ["sha1"], name: "index_tracked_files_on_sha1"
     t.index ["size"], name: "index_tracked_files_on_size"
     t.index ["status"], name: "index_tracked_files_on_status"
+    t.index ["tracked_directory_id"], name: "index_tracked_files_on_tracked_directory_id"
     t.index ["updated_at"], name: "index_tracked_files_on_updated_at"
   end
 

@@ -2,7 +2,8 @@ require 'rails_helper'
 
 RSpec.describe TrackedChange do
 
-  let(:tracked_file) { TrackedFile.create!(path: path, sha1: sha1, md5: md5, size: 410226) }
+  let(:dir)  { TrackedDirectory.create(path: fixture_path) }
+  let(:tracked_file) { TrackedFile.create!(tracked_directory: dir, path: path, sha1: sha1, md5: md5, size: 410226) }
   let(:path) { File.join(fixture_path, "nypl.jpg") }
   let(:sha1) { "37781031df4573b90ef045889b7da0ab2655bf74" }
   let(:md5) { "57a88467c003f53d316a92e8896833b0" }
