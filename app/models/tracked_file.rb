@@ -1,5 +1,8 @@
+require 'elasticsearch/model'
+
 class TrackedFile < ActiveRecord::Base
 
+  include Elasticsearch::Model
   include HasFixity
   include HasStatus
   include TrackedFileAdmin

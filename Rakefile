@@ -7,4 +7,6 @@ Rails.application.load_tasks
 
 require 'resque/tasks'
 
+require 'elasticsearch/rails/tasks/import'
+
 task default: :spec

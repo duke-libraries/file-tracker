@@ -14,6 +14,8 @@ gem 'devise'
 gem 'omniauth-shibboleth'
 gem 'cancancan'
 gem 'duracloud-client', '~> 0.10.2'
+gem 'elasticsearch-model'
+gem 'elasticsearch-rails'
 
 gem 'redis', '~> 3.0'
 gem 'resque', '~> 1.27'
