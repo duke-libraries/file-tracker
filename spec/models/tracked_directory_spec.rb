@@ -7,12 +7,10 @@ RSpec.describe TrackedDirectory do
     subject { described_class.create!(path: path) }
     before { subject.track! }
     it "tracks files" do
-      file = File.join(subject.path, "nypl.jpg")
-      expect(subject.tracked_files.pluck(:path)).to include(file)
+      expect(subject.tracked_files.pluck(:path)).to include("nypl.jpg")
     end
     it "excludes empty files" do
-      empty_file = File.join(subject.path, "empty.txt")
-      expect(subject.tracked_files.pluck(:path)).not_to include(empty_file)
+      expect(subject.tracked_files.pluck(:path)).not_to include("empty.txt")
     end
   end
 

@@ -9,7 +9,7 @@ class FixityCheck < ActiveRecord::Base
   validates_presence_of :started_at, :tracked_file
   validates_inclusion_of :status, in: FileTracker::Status.values
 
-  delegate :path, to: :tracked_file
+  delegate :path, :absolute_path, to: :tracked_file
 
   after_create :update_tracked_file
   after_create :track_change, if: :track_change?

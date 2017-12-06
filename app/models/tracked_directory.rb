@@ -1,19 +1,19 @@
+require 'pathname'
+
 class TrackedDirectory < ActiveRecord::Base
 
-  include HasPathname
   include TrackedDirectoryAdmin
 
   has_many :tracked_files, dependent: :destroy
-  before_validation :normalize_path!
-  validates :path, directory_exists: true, readable: true, uniqueness: true
+  before_validation :sanitize_path!
+  validates :path, directory_exists: true, absolute_path: true, readable: true, uniqueness: true
 
   def to_s
     path
   end
 
-  # @deprecated Use {#tracked_files} instead.
-  def _tracked_files
-    TrackedFile.under(path)
+  def pathname
+    Pathname.new(path)
   end
 
   def count
@@ -32,18 +32,15 @@ class TrackedDirectory < ActiveRecord::Base
   end
 
   def track
-    IO.popen(["find", path, "-type", "f", "-not", "-empty"]) do |io|
+    IO.popen("find . -type f -not -empty", chdir: path) do |io|
       while io.gets
-        path = $_.chomp
-        TrackedFile.track!(self, path)
+        TrackedFile.track!(self, $_.chomp)
       end
     end
   end
 
-  private
-
-  def normalize_path!
-    self.path = File.realdirpath(path)
+  def sanitize_path!
+    self.path = pathname.cleanpath.to_s
   end
 
 end

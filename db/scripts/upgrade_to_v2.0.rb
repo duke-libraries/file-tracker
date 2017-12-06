@@ -6,5 +6,12 @@
 
 puts "Setting tracked_directory_id for each row in tracked_files ..."
 TrackedDirectory.all.each do |dir|
-  dir._tracked_files.update_all(tracked_directory_id: dir.id)
+  files = TrackedFile.where("path LIKE ?", "#{dir.path}/%")
+  files.update_all(tracked_directory_id: dir.id)
+end
+
+puts "Updating TrackedFile paths to make relative ..."
+TrackedFile.all.each do |file|
+  file.sanitize_path!
+  file.save!
 end

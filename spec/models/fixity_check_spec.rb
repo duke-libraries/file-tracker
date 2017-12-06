@@ -4,8 +4,9 @@ RSpec.describe FixityCheck do
 
   subject { described_class.new(tracked_file: tracked_file) }
 
-  let(:path) { File.join(fixture_path, "nypl.jpg") }
-  let(:tracked_file) { TrackedFile.create(path: path, sha1: sha1, size: size) }
+  let(:dir) { TrackedDirectory.create(path: fixture_path) }
+  let(:path) { "nypl.jpg" }
+  let(:tracked_file) { TrackedFile.create(tracked_directory: dir, path: path, sha1: sha1, size: size) }
   let(:sha1) { "37781031df4573b90ef045889b7da0ab2655bf74" }
   let(:size) { 410226 }
 
@@ -14,7 +15,7 @@ RSpec.describe FixityCheck do
       expect { subject.execute }.to change(tracked_file, :fixity_checked_at).from(nil)
     end
     it "updates the status" do
-      allow(File).to receive(:size).with(path) { 410225 }
+      allow(File).to receive(:size).with(tracked_file.absolute_path) { 410225 }
       expect { subject.execute }.to change(tracked_file, :status).to(FileTracker::Status::MODIFIED)
     end
   end
@@ -25,7 +26,7 @@ RSpec.describe FixityCheck do
     end
     describe "when size has changed" do
       it "raises an exception" do
-        allow(File).to receive(:size).with(tracked_file.path) { 410225 }
+        allow(File).to receive(:size).with(tracked_file.absolute_path) { 410225 }
         expect { subject.check_size }.to raise_error(FileTracker::ModifiedFileError)
       end
     end
@@ -73,7 +74,7 @@ RSpec.describe FixityCheck do
     describe "when the size has changed" do
       let(:new_size) { 410225 }
       before do
-        allow(File).to receive(:size).with(tracked_file.path) { new_size }
+        allow(File).to receive(:size).with(tracked_file.absolute_path) { new_size }
       end
       it "does not check the sha1" do
         expect(subject).not_to receive(:check_sha1)
@@ -86,8 +87,9 @@ RSpec.describe FixityCheck do
       end
     end
     describe "when the file is missing" do
-      let(:file) { Tempfile.create("foo") }
-      let(:tracked_file) { TrackedFile.create(path: file.path) }
+      let(:dir) { TrackedDirectory.create(path: Dir.mktmpdir) }
+      let(:file) { Tempfile.create("foo", dir.path) }
+      let(:tracked_file) { TrackedFile.create(tracked_directory: dir, path: File.basename(file.path)) }
       before do
         file.binmode
         file.write File.read(File.join(fixture_path, "nypl.jpg"))
@@ -102,7 +104,7 @@ RSpec.describe FixityCheck do
     describe "when the user lacks permission to read the file" do
       let(:dir) { TrackedDirectory.create(path: Dir.mktmpdir) }
       let(:file) { Tempfile.create("foo", dir.path) }
-      let(:tracked_file) { TrackedFile.create(tracked_directory: dir, path: file.path) }
+      let(:tracked_file) { TrackedFile.create(tracked_directory: dir, path: File.basename(file.path)) }
       before do
         file.binmode
         file.write File.read(File.join(fixture_path, "nypl.jpg"))

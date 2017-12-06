@@ -3,16 +3,23 @@ class TrackedFile < ActiveRecord::Base
   include Indexed
   include HasFixity
   include HasStatus
-  include HasPathname
   include TrackedFileAdmin
 
   has_many :fixity_checks, dependent: :destroy
   has_many :tracked_changes, dependent: :destroy
   belongs_to :tracked_directory
 
-  validates :path, file_exists: true, file_not_empty: true, readable: true, uniqueness: true, on: :create
+  validates_presence_of :tracked_directory
+  validates :path,
+            file_exists: true,
+            file_not_empty: true,
+            file_readable: true,
+            relative_path: true,
+            uniqueness: { scope: :tracked_directory },
+            on: :create
   validates_inclusion_of :status, in: FileTracker::Status.values
 
+  before_validation :sanitize_path!
   before_save :set_size, unless: :size?
   after_save :generate_sha1, if: :generate_sha1?
 
@@ -23,14 +30,19 @@ class TrackedFile < ActiveRecord::Base
              fixity_check_cutoff_date)
   end
 
-  def self.track!(dir, *paths)
-    paths.each { |path| find_or_initialize_by(tracked_directory: dir, path: path).track! }
+  def self.sanitize_path(dir, path)
+    pathname = Pathname.new(path)
+    cleaned = pathname.cleanpath
+    relativized = cleaned.absolute? ? cleaned.relative_path_from(dir.pathname) : cleaned
+    relativized.to_s
   end
 
-  def self.under(path)
-    return all if path.blank? || path == "/"
-    value = path.sub(/\/\z/, "") # remove trailing slash
-    where("path LIKE ?", "#{value}/%")
+  def self.track!(dir, *paths)
+    paths.each do |path|
+      sanitized_path = sanitize_path(dir, path)
+      file = find_or_initialize_by(tracked_directory: dir, path: sanitized_path)
+      file.track!
+    end
   end
 
   def self.fixity_check_cutoff_date
@@ -41,13 +53,12 @@ class TrackedFile < ActiveRecord::Base
     path
   end
 
-  def relpath
-    @relpath ||= pathname.relative_path_from(tracked_directory.pathname).to_s
+  def absolute_path
+    File.expand_path(path, tracked_directory.path)
   end
 
-  # @deprecated Use {#tracked_directory} instead.
-  def _tracked_directory
-    TrackedDirectory.where("path = substr(?, 1, length(path))", path).first
+  def pathname
+    Pathname.new(path)
   end
 
   def large?
@@ -156,6 +167,10 @@ class TrackedFile < ActiveRecord::Base
   def reset!
     reset_fixity
     ok!
+  end
+
+  def sanitize_path!
+    self.path = self.class.sanitize_path(tracked_directory, path)
   end
 
   private

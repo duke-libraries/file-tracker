@@ -22,14 +22,14 @@ module HasFixity
 
   def calculate_size
     RetryOnError.wrap(RETRIABLE_IO_ERRORS, wait: 60) do
-      File.size(path)
+      File.size(absolute_path)
     end
   end
 
   def calculate_digest(digest)
     digest_class = Digest.const_get(digest.to_s.upcase)
     RetryOnError.wrap(RETRIABLE_IO_ERRORS, wait: 60) do
-      digest_class.file(path).hexdigest
+      digest_class.file(absolute_path).hexdigest
     end
   end
 
