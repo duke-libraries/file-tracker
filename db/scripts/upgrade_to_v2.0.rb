@@ -11,7 +11,7 @@ TrackedDirectory.all.each do |dir|
 end
 
 puts "Updating TrackedFile paths to make relative ..."
-TrackedFile.where("path NOT LIKE '/%'").each do |file|
+TrackedFile.where("path LIKE '/%'").each do |file|
   file.sanitize_path!
   file.save!
 end
