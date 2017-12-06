@@ -23,4 +23,10 @@ module Indexed
     Resque.enqueue(DeleteDocumentIndexJob, self.class.to_s, id)
   end
 
+  module ClassMethods
+    def reindex
+      all.each(&:add_to_index)
+    end
+  end
+
 end
