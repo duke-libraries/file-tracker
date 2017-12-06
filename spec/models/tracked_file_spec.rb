@@ -5,7 +5,6 @@ RSpec.describe TrackedFile do
   let(:dir)  { TrackedDirectory.create(path: fixture_path) }
   let(:path) { File.join(fixture_path, "nypl.jpg") }
   let(:sha1) { "37781031df4573b90ef045889b7da0ab2655bf74" }
-  let(:md5) { "57a88467c003f53d316a92e8896833b0" }
   let(:size) { 410226 }
 
   describe "create" do
@@ -44,10 +43,6 @@ RSpec.describe TrackedFile do
         subject.reload
         expect(subject.sha1).to be_nil
       end
-      it "does not set the MD5" do
-        subject.reload
-        expect(subject.md5).to be_nil
-      end
     end
     describe "when set_sha1 encounters a file not found error" do
       subject { described_class.new(tracked_directory: dir, path: path, size: size) }
@@ -59,21 +54,6 @@ RSpec.describe TrackedFile do
       end
       it "marks the file as MISSING" do
         expect_any_instance_of(described_class).to receive(:set_digest).with("sha1").and_raise(Errno::ENOENT)
-        subject.save!
-        subject.reload
-        expect(subject).to be_missing
-      end
-    end
-    describe "when set_md5 encounters a file not found error" do
-      subject { described_class.new(tracked_directory: dir, path: path, size: size, sha1: sha1) }
-      it "tracks a deletion" do
-        expect_any_instance_of(described_class).to receive(:set_digest).with("md5").and_raise(Errno::ENOENT)
-        subject.save!
-        tracked_change = subject.tracked_changes.last
-        expect(tracked_change).to be_deletion
-      end
-      it "marks the file as MISSING" do
-        expect_any_instance_of(described_class).to receive(:set_digest).with("md5").and_raise(Errno::ENOENT)
         subject.save!
         subject.reload
         expect(subject).to be_missing
@@ -102,40 +82,6 @@ RSpec.describe TrackedFile do
           subject.save!
           subject.reload
           expect(subject.sha1).to eq sha1
-        end
-      end
-    end
-    describe "MD5 generation" do
-      describe "when MD5 is present" do
-        subject { described_class.create(tracked_directory: dir, path: path, md5: md5) }
-        it "does not try to generate an MD5" do
-          expect(subject).not_to receive(:generate_md5)
-          subject.touch
-        end
-        describe "when explicitly calling #generate_md5" do
-          it "does not generate an MD5" do
-            expect(subject).not_to receive(:md5=)
-            subject.generate_sha1
-          end
-        end
-      end
-      describe "when MD5 is not present" do
-        describe "and SHA1 is present" do
-          subject { described_class.new(tracked_directory: dir, path: path, sha1: sha1) }
-          it "generates an MD5" do
-            subject.save!
-            subject.reload
-            expect(subject.md5).to eq md5
-          end
-        end
-        describe "and SHA1 is not present" do
-          subject { described_class.new(tracked_directory: dir, path: path) }
-          before { allow(subject).to receive(:generate_sha1?) { false } }
-          it "does not generate an MD5" do
-            subject.save!
-            subject.reload
-            expect(subject.md5).to be_nil
-          end
         end
       end
     end
@@ -207,42 +153,6 @@ RSpec.describe TrackedFile do
         expect(TrackedFile.error).to include file
       }
     end
-    describe "duracloud" do
-      specify {
-        file = TrackedFile.create(tracked_directory: dir, path: path)
-        expect(TrackedFile.duracloud(:replicated)).not_to include file
-        file.duracloud_status = DuracloudCheck::REPLICATED
-        file.save!
-        expect(TrackedFile.duracloud(:replicated)).to include file
-      }
-    end
-    describe "duracloud_not_replicated" do
-      specify {
-        file = TrackedFile.create(tracked_directory: dir, path: path)
-        expect(TrackedFile.duracloud(:not_replicated)).not_to include file
-        file.duracloud_status = DuracloudCheck::NOT_REPLICATED
-        file.save!
-        expect(TrackedFile.duracloud(:not_replicated)).to include file
-      }
-    end
-    describe "duracloud_conflict" do
-      specify {
-        file = TrackedFile.create(tracked_directory: dir, path: path)
-        expect(TrackedFile.duracloud(:conflict)).not_to include file
-        file.duracloud_status = DuracloudCheck::CONFLICT
-        file.save!
-        expect(TrackedFile.duracloud(:conflict)).to include file
-      }
-    end
-    describe "duracloud_not_checked" do
-      specify {
-        file = TrackedFile.create(tracked_directory: dir, path: path)
-        expect(TrackedFile.duracloud(:not_checked)).to include file
-        file.duracloud_status = DuracloudCheck::REPLICATED
-        file.save!
-        expect(TrackedFile.duracloud(:not_checked)).not_to include file
-      }
-    end
   end # scopes
 
   describe "status value methods" do
@@ -294,30 +204,6 @@ RSpec.describe TrackedFile do
       specify {
         expect { subject.error! }.to change(subject, :status).to(FileTracker::Status::ERROR)
       }
-    end
-  end
-
-  describe "duracloud" do
-    let!(:dir) { TrackedDirectory.create!(path: fixture_path, duracloud_space: 'foo') }
-    subject { described_class.new(tracked_directory: dir, path: path) }
-    it { is_expected.to_not be_duracloud_checkable }
-    describe "new record with an MD5" do
-      before { subject.md5 = md5 }
-      it { is_expected.to_not be_duracloud_checkable }
-      describe "after persisting" do
-        before do
-          subject.save!
-          subject.reload
-        end
-        it { is_expected.to be_duracloud_checkable }
-        describe "and status is not OK" do
-          before do
-            subject.modified!
-            subject.save!
-          end
-          it { is_expected.to_not be_duracloud_checkable }
-        end
-      end
     end
   end
 
@@ -623,65 +509,17 @@ RSpec.describe TrackedFile do
     end
   end
 
-  describe "duracloud checking" do
-    let!(:dir) { TrackedDirectory.create!(path: fixture_path, duracloud_space: 'foo') }
-    subject { described_class.create!(tracked_directory: dir, path: path, md5: md5) }
-    it "sets the duracloud_checked_at date/time" do
-      allow(Duracloud::Content).to receive(:exist?).with(space_id: 'foo', content_id: 'nypl.jpg', md5: md5) { true }
-      expect { subject.check_duracloud!; subject.reload }.to change(subject, :duracloud_checked_at).from(nil)
-    end
-    describe "when the content has been replicated" do
-      before do
-        allow(Duracloud::Content).to receive(:exist?).with(space_id: 'foo', content_id: 'nypl.jpg', md5: md5) { true }
-      end
-      it "sets the status to OK" do
-        expect { subject.check_duracloud!; subject.reload }.to change(subject, :duracloud_status).to(0)
-      end
-    end
-    describe "when the content has not been replicated" do
-      before do
-        allow(Duracloud::Content).to receive(:exist?).with(space_id: 'foo', content_id: 'nypl.jpg', md5: md5) { false }
-      end
-      it "sets the status to MISSING" do
-        expect { subject.check_duracloud!; subject.reload }.to change(subject, :duracloud_status).to(2)
-      end
-    end
-    describe "when the DuraCloud replica is in conflict with the local resource" do
-      before do
-        allow(Duracloud::Content).to receive(:exist?).with(space_id: 'foo', content_id: 'nypl.jpg', md5: md5).and_raise(Duracloud::MessageDigestError)
-      end
-      it "sets the status to MODIFIED" do
-        expect { subject.check_duracloud!; subject.reload }.to change(subject, :duracloud_status).to(1)
-      end
-    end
-  end
-
   describe "resetting attributes" do
-    subject { described_class.new(tracked_directory: dir, path: path, sha1: sha1, md5: md5, size: size, status: 1) }
+    subject { described_class.new(tracked_directory: dir, path: path, sha1: sha1, size: size, status: 1) }
     describe "#reset!" do
       it "resets the SHA1" do
         expect { subject.reset! }.to change(subject, :sha1).to(nil)
-      end
-      it "resets the MD5" do
-        expect { subject.reset! }.to change(subject, :md5).to(nil)
       end
       it "resets the size" do
         expect { subject.reset! }.to change(subject, :size).to(nil)
       end
       it "resets the status" do
         expect { subject.reset! }.to change(subject, :status).to(0)
-      end
-    end
-    describe "after creation" do
-      before do
-        subject.duracloud_status = 2
-        subject.duracloud_checked_at = DateTime.now
-        subject.save!
-      end
-      describe "when the MD5 changes" do
-        it "resets the DuraCloud attributes" do
-          expect { subject.md5 = nil; subject.save! }.to change(subject, :duracloud_status).from(2).to(-1)
-        end
       end
     end
   end

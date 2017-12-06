@@ -6,7 +6,7 @@ class TrackedChange < ActiveRecord::Base
 
   belongs_to :tracked_file
 
-  delegate :path, to: :tracked_file
+  delegate :path, :absolute_path, to: :tracked_file
 
   validates_presence_of :tracked_file, :discovered_at
   validates_inclusion_of :change_type, in: FileTracker::Change::Type.values

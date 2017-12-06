@@ -1,41 +1,48 @@
-require 'elasticsearch/model'
-
 class TrackedFile < ActiveRecord::Base
 
-  include Elasticsearch::Model
+  include Indexed
   include HasFixity
   include HasStatus
-  include HasPathname
   include TrackedFileAdmin
 
   has_many :fixity_checks, dependent: :destroy
   has_many :tracked_changes, dependent: :destroy
   belongs_to :tracked_directory
 
-  validates :path, file_exists: true, file_not_empty: true, readable: true, uniqueness: true, on: :create
+  validates_presence_of :tracked_directory
+  validates :path,
+            file_exists: true,
+            file_not_empty: true,
+            file_readable: true,
+            relative_path: true,
+            uniqueness: { scope: :tracked_directory },
+            on: :create
   validates_inclusion_of :status, in: FileTracker::Status.values
 
+  before_validation :sanitize_path!
   before_save :set_size, unless: :size?
-  before_save :reset_duracloud_attributes, if: [:persisted?, :md5_changed?]
   after_save :generate_sha1, if: :generate_sha1?
-  after_save :generate_md5, if: :generate_md5?
 
   scope :large, ->{ where("size >= ?", FileTracker.large_file_threshhold) }
-  scope :duracloud, ->(v) { where(duracloud_status: DuracloudCheck.const_get(v.to_s.upcase)) }
 
   def self.check_fixity?
     ok.where("sha1 IS NOT NULL AND (fixity_checked_at IS NULL OR fixity_checked_at < ?)",
              fixity_check_cutoff_date)
   end
 
-  def self.track!(dir, *paths)
-    paths.each { |path| find_or_initialize_by(tracked_directory: dir, path: path).track! }
+  def self.sanitize_path(dir, path)
+    pathname = Pathname.new(path)
+    cleaned = pathname.cleanpath
+    relativized = cleaned.absolute? ? cleaned.relative_path_from(dir.pathname) : cleaned
+    relativized.to_s
   end
 
-  def self.under(path)
-    return all if path.blank? || path == "/"
-    value = path.sub(/\/\z/, "") # remove trailing slash
-    where("path LIKE ?", "#{value}/%")
+  def self.track!(dir, *paths)
+    paths.each do |path|
+      sanitized_path = sanitize_path(dir, path)
+      file = find_or_initialize_by(tracked_directory: dir, path: sanitized_path)
+      file.track!
+    end
   end
 
   def self.fixity_check_cutoff_date
@@ -46,13 +53,12 @@ class TrackedFile < ActiveRecord::Base
     path
   end
 
-  def relpath
-    @relpath ||= pathname.relative_path_from(tracked_directory.pathname).to_s
+  def absolute_path
+    File.expand_path(path, tracked_directory.path)
   end
 
-  # @deprecated Use {#tracked_directory} instead.
-  def _tracked_directory
-    TrackedDirectory.where("path = substr(?, 1, length(path))", path).first
+  def pathname
+    Pathname.new(path)
   end
 
   def large?
@@ -72,10 +78,6 @@ class TrackedFile < ActiveRecord::Base
     fixity_checked_at?
   end
 
-  def duracloud_checkable?
-    persisted? && md5? && ok? && tracked_directory.duracloud_space?
-  end
-
   def generate_digest?(digest)
     send "generate_#{digest}?"
   end
@@ -86,14 +88,6 @@ class TrackedFile < ActiveRecord::Base
 
   def generate_sha1
     generate_digest :sha1
-  end
-
-  def generate_md5?
-    !md5? && sha1? && ok?
-  end
-
-  def generate_md5
-    generate_digest :md5
   end
 
   def generate_digest(digest)
@@ -116,10 +110,6 @@ class TrackedFile < ActiveRecord::Base
     set_digest! :sha1
   end
 
-  def set_md5!
-    set_digest! :md5
-  end
-
   def check_fixity?
     fixity_checkable? && (!fixity_checked? || fixity_check_due?)
   end
@@ -130,15 +120,6 @@ class TrackedFile < ActiveRecord::Base
     else
       raise FileTracker::FixityError,
             "Tracked file #{id} cannot be fixity checked: #{tracked_file.inspect}"
-    end
-  end
-
-  def check_duracloud!
-    if duracloud_checkable?
-      DuracloudCheck.call(self)
-    else
-      raise FileTracker::Error,
-            "Tracked file #{id} cannot be checked in DuraCloud: #{tracked_file.inspect}"
     end
   end
 
@@ -188,14 +169,11 @@ class TrackedFile < ActiveRecord::Base
     ok!
   end
 
-  private
-
-  def reset_duracloud_attributes
-    assign_attributes(
-      duracloud_status: DuracloudCheck::NOT_CHECKED,
-      duracloud_checked_at: nil
-    )
+  def sanitize_path!
+    self.path = self.class.sanitize_path(tracked_directory, path)
   end
+
+  private
 
   def commit_digest(digest)
     if send("#{digest}_changed?")

@@ -26,4 +26,4 @@ end
 require 'resque'
 Resque.inline = true
 
-require 'webmock/rspec'
+# require 'webmock/rspec'
