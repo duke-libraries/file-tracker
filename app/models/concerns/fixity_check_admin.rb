@@ -28,7 +28,6 @@ module FixityCheckAdmin
         field :status do
           pretty_value { I18n.t("file_tracker.status.#{value}") }
         end
-        field :md5
         field :sha1
         field :size do
           pretty_value { ActiveSupport::NumberHelper.number_to_human_size(value) }

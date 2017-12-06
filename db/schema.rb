@@ -10,19 +10,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171204164311) do
-
-  create_table "duracloud_manifest_entries", force: :cascade do |t|
-    t.string "space_id", null: false
-    t.text "content_id", limit: 4096, null: false
-    t.string "md5", null: false
-    t.index ["content_id"], name: "index_duracloud_manifest_entries_on_content_id"
-    t.index ["space_id"], name: "index_duracloud_manifest_entries_on_space_id"
-  end
+ActiveRecord::Schema.define(version: 20171206004552) do
 
   create_table "fixity_checks", force: :cascade do |t|
     t.string "sha1"
-    t.string "md5"
     t.integer "size", limit: 8
     t.integer "status", limit: 1, null: false
     t.text "message"
@@ -59,25 +50,19 @@ ActiveRecord::Schema.define(version: 20171204164311) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "title"
-    t.string "duracloud_space"
-    t.datetime "duracloud_checked_at"
   end
 
   create_table "tracked_files", force: :cascade do |t|
     t.text "path", limit: 4096, null: false
     t.string "sha1"
-    t.string "md5"
     t.integer "size", limit: 8
     t.datetime "fixity_checked_at"
     t.integer "status", limit: 1, default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.integer "duracloud_status", limit: 1, default: -1, null: false
-    t.datetime "duracloud_checked_at"
     t.integer "tracked_directory_id"
     t.index ["created_at"], name: "index_tracked_files_on_created_at"
     t.index ["fixity_checked_at"], name: "index_tracked_files_on_fixity_checked_at"
-    t.index ["md5"], name: "index_tracked_files_on_md5"
     t.index ["path"], name: "index_tracked_files_on_path"
     t.index ["sha1"], name: "index_tracked_files_on_sha1"
     t.index ["size"], name: "index_tracked_files_on_size"

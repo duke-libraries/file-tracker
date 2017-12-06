@@ -1,8 +1,6 @@
-require 'elasticsearch/model'
-
 class TrackedFile < ActiveRecord::Base
 
-  include Elasticsearch::Model
+  include Indexed
   include HasFixity
   include HasStatus
   include HasPathname
@@ -16,12 +14,9 @@ class TrackedFile < ActiveRecord::Base
   validates_inclusion_of :status, in: FileTracker::Status.values
 
   before_save :set_size, unless: :size?
-  before_save :reset_duracloud_attributes, if: [:persisted?, :md5_changed?]
   after_save :generate_sha1, if: :generate_sha1?
-  after_save :generate_md5, if: :generate_md5?
 
   scope :large, ->{ where("size >= ?", FileTracker.large_file_threshhold) }
-  scope :duracloud, ->(v) { where(duracloud_status: DuracloudCheck.const_get(v.to_s.upcase)) }
 
   def self.check_fixity?
     ok.where("sha1 IS NOT NULL AND (fixity_checked_at IS NULL OR fixity_checked_at < ?)",
@@ -72,10 +67,6 @@ class TrackedFile < ActiveRecord::Base
     fixity_checked_at?
   end
 
-  def duracloud_checkable?
-    persisted? && md5? && ok? && tracked_directory.duracloud_space?
-  end
-
   def generate_digest?(digest)
     send "generate_#{digest}?"
   end
@@ -86,14 +77,6 @@ class TrackedFile < ActiveRecord::Base
 
   def generate_sha1
     generate_digest :sha1
-  end
-
-  def generate_md5?
-    !md5? && sha1? && ok?
-  end
-
-  def generate_md5
-    generate_digest :md5
   end
 
   def generate_digest(digest)
@@ -116,10 +99,6 @@ class TrackedFile < ActiveRecord::Base
     set_digest! :sha1
   end
 
-  def set_md5!
-    set_digest! :md5
-  end
-
   def check_fixity?
     fixity_checkable? && (!fixity_checked? || fixity_check_due?)
   end
@@ -130,15 +109,6 @@ class TrackedFile < ActiveRecord::Base
     else
       raise FileTracker::FixityError,
             "Tracked file #{id} cannot be fixity checked: #{tracked_file.inspect}"
-    end
-  end
-
-  def check_duracloud!
-    if duracloud_checkable?
-      DuracloudCheck.call(self)
-    else
-      raise FileTracker::Error,
-            "Tracked file #{id} cannot be checked in DuraCloud: #{tracked_file.inspect}"
     end
   end
 
@@ -189,13 +159,6 @@ class TrackedFile < ActiveRecord::Base
   end
 
   private
-
-  def reset_duracloud_attributes
-    assign_attributes(
-      duracloud_status: DuracloudCheck::NOT_CHECKED,
-      duracloud_checked_at: nil
-    )
-  end
 
   def commit_digest(digest)
     if send("#{digest}_changed?")

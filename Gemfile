@@ -13,7 +13,6 @@ gem 'figaro'
 gem 'devise'
 gem 'omniauth-shibboleth'
 gem 'cancancan'
-gem 'duracloud-client', '~> 0.10.2'
 gem 'elasticsearch-model'
 gem 'elasticsearch-rails'
 
@@ -28,7 +27,7 @@ group :development, :test do
   gem 'byebug'
   gem 'rspec-rails'
   gem 'rspec-its'
-  gem 'webmock'
+  # gem 'webmock'
 end
 
 group :production do

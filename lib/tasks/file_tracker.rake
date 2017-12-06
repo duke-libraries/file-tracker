@@ -60,35 +60,6 @@ EOS
     puts "BatchFixityCheckJob enqueued."
   end
 
-  task :duracloud, [:only_status] do |t, args|
-    warn "[DEPRECATION] The `file_tracker:duracloud` task is deprecated." \
-         " Use `file_tracker:duracloud:check` task instead."
-    Rake::Task["file_tracker:duracloud:check"].invoke(*args)
-  end
-
-  namespace :directory do
-    desc "Print a directory summary report to STDOUT for the provided path."
-    task :summary, [:path] => :environment do |t, args|
-      summary = DirectorySummary.new(path: args[:path])
-      puts summary.csv
-    end
-  end
-
-  namespace :duracloud do
-    desc "Run the batch DuraCloud check routine, optionally limiting tracked_files by duracloud_status."
-    task :check, [:status] => :environment do |t, args|
-      Resque.enqueue(BatchDuracloudCheckJob, args[:status])
-      print "BatchDuracloudCheckJob enqueued"
-      print " for status #{args[:only_status]}" if args[:status]
-      puts "."
-    end
-
-    desc "List paths of files having the provided duracloud_status, optionally limited by directory."
-    task :list, [:status, :dir] => :environment do |t, args|
-      puts TrackedFile.under(args[:dir]).duracloud(args[:status]).pluck(:path)
-    end
-  end # :duracloud
-
   namespace :queues do
     desc "Print the status of the QueueManager."
     task :status => :environment do
