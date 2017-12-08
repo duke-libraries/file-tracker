@@ -174,7 +174,11 @@ class TrackedFile < ActiveRecord::Base
   end
 
   def folders
-    pathname.dirname.descend.map(&:to_s)
+    @folders ||= pathname.dirname.descend.map(&:to_s)
+  end
+
+  def base_folder
+    folders.first
   end
 
   private

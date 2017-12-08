@@ -6,16 +6,10 @@ module TrackedFileIndexing
   end
 
   def as_indexed_json(options = {})
-    as_json(
-      options.merge(
-             methods: [:absolute_path, :status_label, :folders],
-             include: {
-               tracked_directory: {
-                 only: [:path, :title]
-               }
-             }
-    )
-    )
+    as_json(options.merge(except: [:id],
+                          methods: [:absolute_path, :status_label, :folders, :base_folder]
+                         )
+           )
   end
 
 end
