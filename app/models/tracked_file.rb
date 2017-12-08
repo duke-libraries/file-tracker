@@ -173,6 +173,10 @@ class TrackedFile < ActiveRecord::Base
     self.path = self.class.sanitize_path(tracked_directory, path)
   end
 
+  def folders
+    pathname.dirname.descend.map(&:to_s)
+  end
+
   private
 
   def commit_digest(digest)
