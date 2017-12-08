@@ -1,6 +1,6 @@
 class TrackedFile < ActiveRecord::Base
 
-  include Indexed
+  include TrackedFileIndexing
   include HasFixity
   include HasStatus
   include TrackedFileAdmin

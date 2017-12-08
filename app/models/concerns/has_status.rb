@@ -19,4 +19,8 @@ module HasStatus
     end
   end
 
+  def status_label
+    I18n.t "file_tracker.status.#{status}"
+  end
+
 end

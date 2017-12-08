@@ -1,6 +1,6 @@
 require 'elasticsearch/model'
 
-module Indexed
+module Indexing
   extend ActiveSupport::Concern
 
   included do
