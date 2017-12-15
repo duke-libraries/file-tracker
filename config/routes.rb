@@ -16,7 +16,11 @@ Rails.application.routes.draw do
   namespace :api, defaults: {format: 'json'} do
     namespace :v1 do
       resources :tracked_files, only: [:show]
-      resources :tracked_directories, only: [:index, :show]
+      resources :tracked_directories, only: [:index, :show] do
+        member do
+          get 'changes'
+        end
+      end
     end
   end
 

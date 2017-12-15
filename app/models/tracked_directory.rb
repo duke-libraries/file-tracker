@@ -24,6 +24,12 @@ class TrackedDirectory < ActiveRecord::Base
     tracked_files.sum(:size)
   end
 
+  def pending_changes
+    TrackedChange.joins(:tracked_files)
+      .where(tracked_changes: { change_status: FileTracker::Change::PENDING },
+             tracked_files: { tracked_directory: self })
+  end
+
   def track!
     self.tracked_at = DateTime.now
     track
