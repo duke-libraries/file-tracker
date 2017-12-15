@@ -50,7 +50,7 @@ class TrackedFile < ActiveRecord::Base
   end
 
   def to_s
-    path
+    absolute_path
   end
 
   def absolute_path

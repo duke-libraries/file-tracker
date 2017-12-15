@@ -1,9 +1,13 @@
 module TrackedDirectoryAdmin
   extend ActiveSupport::Concern
 
+  def object_label
+    title || path
+  end
+
   included do
     rails_admin do
-      object_label_method { :path }
+      object_label_method { :object_label }
 
       list do
         field :id

@@ -21,6 +21,7 @@ en:
         change_type: Type
         change_status: Status        
         discovered_at: Discovered
+        tracked_file: File
       tracked_directory:        
         count: File Count
         created_at: Added
@@ -29,10 +30,13 @@ en:
       tracked_file:
         created_at: Discovered
         fixity_checked_at: Fixity Checked
+        path: Relative Path
+        tracked_directory: Directory
       fixity_check:
         checked_at: Checked At
         started_at: Started At
         finished_at: Finished At
+        tracked_file: File
   attributes:
     id: ID
     sha1: SHA1

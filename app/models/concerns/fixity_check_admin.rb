@@ -30,7 +30,7 @@ module FixityCheckAdmin
         end
         field :sha1
         field :size do
-          pretty_value { ActiveSupport::NumberHelper.number_to_human_size(value) }
+          pretty_value { "%s (%s)" % [value, ActiveSupport::NumberHelper.number_to_human_size(value)] }
         end
         field :message
       end
