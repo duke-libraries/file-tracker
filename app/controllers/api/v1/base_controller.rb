@@ -1,8 +1,8 @@
 module Api::V1
-  class BaseController < ::ApplicationController
+  class BaseController < ::ActionController::API
+    include ActionController::MimeResponds
 
-    respond_to :json
-    protect_from_forgery with: :null_session
+    respond_to :json, :csv
 
     rescue_from ActiveRecord::RecordNotFound do |exc|
       render :nothing, status: 404

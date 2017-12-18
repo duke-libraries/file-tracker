@@ -1,4 +1,4 @@
-class TrackedChange < ActiveRecord::Base
+class TrackedChange < ApplicationRecord
 
   include FileTracker::Change
   include HasFixity

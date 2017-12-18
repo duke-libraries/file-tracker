@@ -4,28 +4,20 @@ module Api::V1
     # GET /
     # HEAD /
     def index
-      render json: TrackedDirectory.all
+      respond_with(TrackedDirectory.all)
     end
 
     # GET /:id
     # HEAD /:id
     def show
-      render json: TrackedDirectory.find(params.require(:id))
+      dir = TrackedDirectory.find(params.require(:id))
+      respond_with(dir)
     end
 
     # GET /:id/changes
     def changes
       dir = TrackedDirectory.find(params.require(:id))
-
-      respond_to do |format|
-        format.json do
-          render json: dir.pending_changes
-        end
-
-        format.csv do
-          # TODO
-        end
-      end
+      respond_with(dir.pending_changes)
     end
 
   end

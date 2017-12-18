@@ -1,6 +1,6 @@
 require 'pathname'
 
-class TrackedDirectory < ActiveRecord::Base
+class TrackedDirectory < ApplicationRecord
 
   include TrackedDirectoryAdmin
 
@@ -25,7 +25,7 @@ class TrackedDirectory < ActiveRecord::Base
   end
 
   def pending_changes
-    TrackedChange.joins(:tracked_files)
+    TrackedChange.joins("INNER JOIN tracked_files ON tracked_changes.tracked_file_id = tracked_files.id")
       .where(tracked_changes: { change_status: FileTracker::Change::PENDING },
              tracked_files: { tracked_directory: self })
   end

@@ -1,10 +1,11 @@
 module Api::V1
-  class TrackedFilesController < ::ApplicationController
+  class TrackedFilesController < BaseController
 
     # GET /:id
     # HEAD /:id
     def show
-      render json: TrackedFile.find(params.require(:id))
+      file = TrackedFile.find(params.require(:id))
+      respond_with(file)
     end
 
   end

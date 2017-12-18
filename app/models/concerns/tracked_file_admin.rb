@@ -15,7 +15,7 @@ module TrackedFileAdmin
           pretty_value { I18n.t("file_tracker.status.#{value}") }
         end
         field :size do
-          pretty_value { "%s (%s)" % [value, ActiveSupport::NumberHelper.number_to_human_size(value)] }
+          pretty_value { ActiveSupport::NumberHelper.number_to_human_size(value) }
         end
         field :tracked_directory
         field :path

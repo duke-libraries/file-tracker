@@ -1,4 +1,4 @@
-class FixityCheck < ActiveRecord::Base
+class FixityCheck < ApplicationRecord
 
   include HasFixity
   include HasStatus

@@ -1,4 +1,4 @@
-class TrackedFile < ActiveRecord::Base
+class TrackedFile < ApplicationRecord
 
   include TrackedFileIndexing
   include HasFixity
