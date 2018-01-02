@@ -1,12 +1,6 @@
 require 'file_tracker'
 
 namespace :file_tracker do
-  desc "Re-index all TrackedFile records."
-  task :reindex => :environment do
-    puts "Re-indexing all TrackedFile records ..."
-    TrackedFile.reindex
-  end
-
   desc "Inventory tracked directory by ID, or all tracked directories (no `id`)."
   task :inventory, [:id] => :environment do |t, args|
     if args[:id]

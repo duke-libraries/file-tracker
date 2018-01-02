@@ -26,7 +26,6 @@ MySQL database creation:
     digest_large    SHA1 digest generation for large files
     fixity          Fixity checks
     fixity_large    Fixity checks on large files
-    index           Elasticsearch index jobs
     inventory       Recursive directory inventory
 
 Resque pool config is in the usual location `config/resque-pool.yml`.
@@ -42,7 +41,6 @@ Set variables in `config/application.yml`.  See the `figaro` gem documentation f
     LARGE_FILE_THRESHHOLD      Integer byte size, above which a file is considered "large" for purposes of job queueing (default: 1000000000 [= 1G]).
     FIXITY_CHECK_PERIOD        Integer number of days after which fixity should be re-checked (default: 60).
     BATCH_FIXITY_CHECK_LIMIT   Integer default maximum number of files to submit for fixity checking in a single batch (default: 100000).
-    INDEX_ENABLED              When set, enables Elasticsearch integration.
 
 ### i18n
 

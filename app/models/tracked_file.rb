@@ -1,6 +1,5 @@
 class TrackedFile < ApplicationRecord
 
-  include TrackedFileIndexing
   include HasFixity
   include HasStatus
   include TrackedFileAdmin
