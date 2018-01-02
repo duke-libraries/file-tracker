@@ -21,12 +21,12 @@ MySQL database creation:
 
 ## Job queues
 
-    batch           Batch jobs which queue up other jobs (should only need 1 worker)
+    batch           Batch jobs which queue up other jobs
     digest          SHA1 digest generation
     digest_large    SHA1 digest generation for large files
     fixity          Fixity checks
     fixity_large    Fixity checks on large files
-    inventory       Recursive directory inventory
+    inventory       Inventory processing
 
 Resque pool config is in the usual location `config/resque-pool.yml`.
 

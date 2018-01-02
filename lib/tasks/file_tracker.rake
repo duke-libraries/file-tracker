@@ -1,6 +1,12 @@
 require 'file_tracker'
 
 namespace :file_tracker do
+  desc "Accept pending changes."
+  task :accept_changes do
+    Resque.enqueue(AcceptPendingChangesJob)
+    puts "AcceptPendingChangesJob enqueued."
+  end
+
   desc "Inventory tracked directory by ID, or all tracked directories (no `id`)."
   task :inventory, [:id] => :environment do |t, args|
     if args[:id]

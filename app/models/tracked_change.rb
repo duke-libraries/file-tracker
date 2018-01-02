@@ -17,10 +17,11 @@ class TrackedChange < ApplicationRecord
 
   def accept!
     if modification?
-      accept_modification
-    elsif deletion?
-      accept_deletion
+      tracked_file.reset!
+      tracked_file.update(sha1: sha1, size: size) # XXX Don't set size here?
     end
+    accepted!
+    save!
   end
 
   def reject!
@@ -62,17 +63,6 @@ class TrackedChange < ApplicationRecord
   end
 
   private
-
-  def accept_modification
-    tracked_file.reset!
-    tracked_file.update(sha1: sha1, size: size) # XXX Don't set size here?
-    accepted!
-    save!
-  end
-
-  def accept_deletion
-    tracked_file.destroy # destroys all tracked changes related to tracked file!
-  end
 
   def set_discovered_at
     self.discovered_at = DateTime.now

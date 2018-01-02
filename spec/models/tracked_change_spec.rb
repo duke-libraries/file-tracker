@@ -68,13 +68,13 @@ RSpec.describe TrackedChange do
                                discovered_at: discovered,
                                change_type: described_class::DELETION)
       }
-      it "destroys the tracked file" do
+      it "does not destroy the tracked file" do
         subject.accept!
-        expect(tracked_file).to be_destroyed
+        expect(tracked_file).not_to be_destroyed
       end
-      it "destroys tracked changes related to the tracked file" do
+      it "does not destroy tracked changes related to the tracked file" do
         subject.accept!
-        expect { subject.reload }.to raise_error(ActiveRecord::RecordNotFound)
+        expect(subject.reload).not_to be_destroyed
       end
     end
   end
