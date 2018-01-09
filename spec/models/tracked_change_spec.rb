@@ -2,10 +2,9 @@ require 'rails_helper'
 
 RSpec.describe TrackedChange do
 
-  let(:tracked_file) { TrackedFile.create!(path: path, sha1: sha1, md5: md5, size: 410226) }
+  let(:tracked_file) { TrackedFile.create!(path: path, sha1: sha1, size: 410226) }
   let(:path) { File.join(fixture_path, "nypl.jpg") }
   let(:sha1) { "37781031df4573b90ef045889b7da0ab2655bf74" }
-  let(:md5) { "57a88467c003f53d316a92e8896833b0" }
   let(:discovered) { DateTime.now }
 
   describe "accept!" do
@@ -21,14 +20,11 @@ RSpec.describe TrackedChange do
                                  discovered_at: discovered,
                                  change_type: described_class::MODIFICATION)
         }
-        it "updates the size tracked file" do
-          expect { subject.accept! }.to change(tracked_file, :size).from(410226).to(410225)
+        it "resets the size of tracked_file to nil" do
+          expect { subject.accept! }.to change(tracked_file, :size).from(410226).to(nil)
         end
         it "resets the sha1 of the tracked_file to nil" do
           expect { subject.accept! }.to change(tracked_file, :sha1).from(sha1).to(nil)
-        end
-        it "resets the md5 of the tracked file to nil" do
-          expect { subject.accept! }.to change(tracked_file, :md5).from(md5).to(nil)
         end
         it "does not change the fixity check time of the tracked file" do
           expect { subject.accept! }.not_to change(tracked_file, :fixity_checked_at)
@@ -48,14 +44,11 @@ RSpec.describe TrackedChange do
                                  discovered_at: discovered,
                                  change_type: described_class::MODIFICATION)
         }
-        it "does not change the size tracked file" do
-          expect { subject.accept! }.not_to change(tracked_file, :size)
+        it "resets the size of the tracked file to nil" do
+          expect { subject.accept! }.to change(tracked_file, :size).to(nil)
         end
-        it "changes the sha1 of the tracked_file" do
-          expect { subject.accept! }.to change(tracked_file, :sha1).from(sha1).to("37781031df4573b90ef045889b7da0ab2655bf73")
-        end
-        it "resets the md5 of the tracked file to nil" do
-          expect { subject.accept! }.to change(tracked_file, :md5).from(md5).to(nil)
+        it "resets the sha1 of the tracked_file to nil" do
+          expect { subject.accept! }.to change(tracked_file, :sha1).from(sha1).to(nil)
         end
         it "does not change the fixity check time of the tracked file" do
           expect { subject.accept! }.not_to change(tracked_file, :fixity_checked_at)

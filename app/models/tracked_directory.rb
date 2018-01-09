@@ -13,22 +13,6 @@ class TrackedDirectory < ActiveRecord::Base
     TrackedFile.under(path)
   end
 
-  def duracloud_checkable_files
-    tracked_files.ok.where.not(md5: nil) if duracloud_checkable?
-  end
-
-  def duracloud_checkable?
-    duracloud_space?
-  end
-
-  def check_duracloud!
-    self.duracloud_checked_at = DateTime.now
-    duracloud_checkable_files.each do |tracked_file|
-      Resque.enqueue(DuracloudCheckJob, tracked_file.id)
-    end
-    save!
-  end
-
   def count
     tracked_files.count
   end
