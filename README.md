@@ -21,12 +21,13 @@ MySQL database creation:
 
 ## Job queues
 
-    inventory       Recursive directory inventory
-    batch           Batch jobs which queue up other jobs (should only need 1 worker)
+    batch           Batch jobs 
+    digest          SHA1 digest generation
+    digest_large    SHA1 digest generation for large files
+    directory       Directory tracking
+    file            File tracking
     fixity          Fixity checks
     fixity_large    Fixity checks on large files
-    digest          SHA1 and MD5 digest generation
-    digest_large    SHA1 and MD5 digest generation for large files
 
 Resque pool config is in the usual location `config/resque-pool.yml`.
 
@@ -46,22 +47,6 @@ Set variables in `config/application.yml`.  See the `figaro` gem documentation f
 
 See `config/locales/en.yml` for i18n keys.
 
-## Track a directory
-
-After a new `TrackedDirectory` instance is created (persisted), a process will automatically inventory the files under that directory.
-
-Jobs are added to three queues:
-
-    inventory
-    digest
-    digest_large (file size > large file threshhold)
-
-New files are discovered by `TrackDirectoryJob` jobs and are eagerly added to the database. File size is calculated
-before insertion.
-
-SHA1 digests are generated asynchoronously by `GenerateDigestJob` jobs. Large files are handled in a separate queue
-for the sake of efficiency.
-
 ## Fixity checking
 
 To run a batch fixity check for files that are due to be (re-)checked, run:
@@ -78,6 +63,3 @@ Fixity check jobs will be created in two queues:
 
 Large files are handled in a separate queue for the sake of efficiency.
 
-## Possible Enhancements
-
-- Listener(s) based on the [listen](https://github.com/guard/listen) gem.
