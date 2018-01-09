@@ -21,7 +21,6 @@ module TrackedDirectoryAdmin
         field :id
         field :title
         field :path
-        field :duracloud_space
         field :count
         field :size do
           pretty_value { ActiveSupport::NumberHelper.number_to_human_size(value) }
@@ -35,9 +34,6 @@ module TrackedDirectoryAdmin
         field :tracked_at do
           date_format :long
         end
-        field :duracloud_checked_at do
-          date_format :long
-        end
       end
 
       edit do
@@ -45,7 +41,6 @@ module TrackedDirectoryAdmin
           read_only { bindings[:object].persisted? }
         end
         field :title
-        field :duracloud_space
       end
     end
   end

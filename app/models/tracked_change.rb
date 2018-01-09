@@ -1,12 +1,19 @@
+require 'logger'
+require 'csv'
+
 class TrackedChange < ActiveRecord::Base
+
+  CHANGE_LOG_DEV = File.join(Rails.root, "log", "#{Rails.env}-changes.log") # log/production-changes.log
+  CHANGE_LOG = ::Logger.new(CHANGE_LOG_DEV, 'weekly').tap do |logger|
+    logger.formatter = proc { |severity, datetime, progname, msg| msg + "\n" }
+  end
 
   include FileTracker::Change
   include HasFixity
   include TrackedChangeAdmin
 
   belongs_to :tracked_file
-
-  delegate :path, to: :tracked_file
+  delegate :path, :tracked_directory, to: :tracked_file
 
   validates_presence_of :tracked_file, :discovered_at
   validates_inclusion_of :change_type, in: FileTracker::Change::Type.values
@@ -14,6 +21,7 @@ class TrackedChange < ActiveRecord::Base
 
   before_validation :set_discovered_at, unless: :discovered_at?
   before_create :set_size, unless: :size?, if: :modification?
+  after_create :log_change
 
   def accept!
     if modification?
@@ -61,11 +69,14 @@ class TrackedChange < ActiveRecord::Base
     end
   end
 
+  def change_type_label
+    I18n.t("file_tracker.change.type.#{change_type}")
+  end
+
   private
 
   def accept_modification
     tracked_file.reset!
-    tracked_file.update(sha1: sha1, size: size) # XXX Don't set size here?
     accepted!
     save!
   end
@@ -76,6 +87,14 @@ class TrackedChange < ActiveRecord::Base
 
   def set_discovered_at
     self.discovered_at = DateTime.now
+  end
+
+  def log_change
+    CHANGE_LOG.info(log_message)
+  end
+
+  def log_message
+    [ discovered_at.to_formatted_s(:iso8601), change_type_label, path ].join("\t")
   end
 
 end

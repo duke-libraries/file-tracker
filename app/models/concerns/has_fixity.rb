@@ -5,7 +5,7 @@ module HasFixity
   RETRIABLE_IO_ERRORS = [ Errno::EAGAIN, Errno::EBADF, Errno::EIO ]
 
   def reset_fixity
-    assign_attributes(sha1: nil, md5: nil, size: nil)
+    assign_attributes(sha1: nil, size: nil)
   end
 
   def set_digest(digest)
@@ -14,10 +14,6 @@ module HasFixity
 
   def set_sha1
     set_digest :sha1
-  end
-
-  def set_md5
-    set_digest :md5
   end
 
   def set_size
@@ -39,10 +35,6 @@ module HasFixity
 
   def calculate_sha1
     calculate_digest :sha1
-  end
-
-  def calculate_md5
-    calculate_digest :md5
   end
 
 end
