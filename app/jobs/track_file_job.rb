@@ -1,6 +1,6 @@
 class TrackFileJob < ApplicationJob
 
-  self.queue = :inventory
+  self.queue = :file
 
   def self.perform(path)
     TrackedFile.track!(path)

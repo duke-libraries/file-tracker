@@ -1,6 +1,6 @@
 class TrackDirectoryJob < ApplicationJob
 
-  self.queue = :inventory
+  self.queue = :directory
 
   def self.perform(tracked_directory_id)
     dir = TrackedDirectory.find(tracked_directory_id)
