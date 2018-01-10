@@ -1,10 +1,15 @@
 require 'file_tracker'
 
 namespace :file_tracker do
-  desc "Inventory tracked directories."
-  task :inventory => :environment do
-    Resque.enqueue(InventoryJob)
-    puts "Inventory job queued."
+  desc "Inventory all tracked directories, or single directory by ID."
+  task :inventory, [:id] => :environment do |t, args|
+    if args[:id]
+      Resque.enqueue(TrackDirectoryJob, args[:id])
+      puts "TrackDirectoryJob enqueued."
+    else
+      Resque.enqueue(InventoryJob)
+      puts "Inventory job enqueued."
+    end
   end
 
   desc "Print application version."
@@ -52,7 +57,7 @@ EOS
   desc "Run the batch fixity check routine, optionally overriding the default limit (#{FileTracker.batch_fixity_check_limit})."
   task :fixity, [:max] => :environment do |t, args|
     Resque.enqueue(BatchFixityCheckJob, args[:max])
-    puts "Batch fixity check job queued."
+    puts "Batch fixity check job enqueued."
   end
 
   namespace :queues do
