@@ -1,23 +1,25 @@
 class TrackedFile < ActiveRecord::Base
 
   include HasFixity
-  include HasStatus
   include TrackedFileAdmin
 
-  has_many :fixity_checks, dependent: :destroy
-  has_many :tracked_changes, dependent: :destroy
-
   validates :path, file_exists: true, file_not_empty: true, readable: true, uniqueness: true, on: :create
-  validates_inclusion_of :status, in: FileTracker::Status.values
 
-  before_save :set_size, unless: :size?
-  after_save :generate_sha1, if: :generate_sha1?
+  before_update if: :fixity_changed? do
+    log("MODIFIED")
+  end
+  before_save :set_fixity
+  after_create { log("ADDED") }
+  after_destroy { log("REMOVED") }
 
   scope :large, ->{ where("size >= ?", FileTracker.large_file_threshhold) }
 
+  def self.logger
+    @logger ||= Logger.new(File.join(Rails.root, "log", "tracked-files.#{Rails.env}.log"), "weekly")
+  end
+
   def self.check_fixity?
-    ok.where("sha1 IS NOT NULL AND (fixity_checked_at IS NULL OR fixity_checked_at < ?)",
-             fixity_check_cutoff_date)
+    where("fixity_checked_at IS NULL OR fixity_checked_at < ?)", fixity_check_cutoff_date)
   end
 
   def self.track!(*paths)
@@ -46,134 +48,49 @@ class TrackedFile < ActiveRecord::Base
     size? && size >= FileTracker.large_file_threshhold
   end
 
-  def fixity_check_due?
-    fixity_checked? &&
-      fixity_checked_at < self.class.fixity_check_cutoff_date
-  end
-
-  def fixity_checkable?
-    persisted? && sha1? && ok?
-  end
-
-  def fixity_checked?
-    fixity_checked_at?
-  end
-
-  def generate_digest?(digest)
-    send "generate_#{digest}?"
-  end
-
-  def generate_sha1?
-    !sha1? && ok?
-  end
-
-  def generate_sha1
-    generate_digest :sha1
-  end
-
-  def generate_md5?
-    !md5? && sha1? && ok?
-  end
-
-  def generate_md5
-    generate_digest :md5
-  end
-
-  def generate_digest(digest)
-    queue = large? ? :digest_large : :digest
-    Resque.enqueue_to(queue, GenerateDigestJob, id, digest)
-  end
-
-  def set_digest!(digest)
-    set_digest(digest)
-    check_size
-    commit_digest(digest)
-  rescue FileTracker::ModifiedFileError => e # raised by check_size
-    rollback_digest(digest)
-    track_modification(e)
-  rescue Errno::ENOENT => e
-    track_deletion(e)
-  end
-
-  def set_sha1!
-    set_digest! :sha1
-  end
-
-  def set_md5!
-    set_digest! :md5
-  end
-
-  def check_fixity?
-    fixity_checkable? && (!fixity_checked? || fixity_check_due?)
+  def fixity_changed?
+    size_changed? || sha1_changed?
   end
 
   def check_fixity!
-    if fixity_checkable?
-      FixityCheck.call(self)
+    fixity_check = FixityCheck.call(self)
+    if fixity_check.missing?
+      destroy
     else
-      raise FileTracker::FixityError,
-            "Tracked file #{id} cannot be fixity checked: #{tracked_file.inspect}"
+      self.fixity_checked_at = fixity_check.started_at
+      if fixity_check.modified?
+        self.size = fixity_check.size
+        self.sha1 = fixity_check.sha1
+      end
+      save!
     end
+    self
   end
 
   def track!
-    if new_record?
-      save!
-    elsif ok?
-      check_size!
-    end
+    new_record? ? save! : check_size!
   end
 
   def check_size!
-    check_size
-  rescue FileTracker::ModifiedFileError => e
-    track_modification(e)
-  rescue Errno::ENOENT => e
-    track_deletion(e)
-  end
-
-  def check_size
-    actual_size = calculate_size
-    if size != actual_size
-      raise FileTracker::ModifiedFileError,
-            I18n.t("file_tracker.error.modification.size",
-                       expected: size,
-                       actual: actual_size)
+    fixity_check = FixityCheck.call(self, only_size: true)
+    if fixity_check.missing?
+      destroy
+    elsif fixity_check.modified?
+      self.size = fixity_check.size
+      self.sha1 = nil
+      save!
     end
-  end
-
-  def track_deletion(exception)
-    raise exception if new_record?
-    missing!
-    save! if changed?
-    TrackedChange.create_deletion!(tracked_file: self)
-  end
-
-  def track_modification(exception)
-    raise exception if new_record?
-    modified!
-    save! if changed?
-    TrackedChange.create_modification(tracked_file: self,
-                                      message: exception.message)
-  end
-
-  def reset!
-    reset_fixity
-    ok!
+    self
   end
 
   private
 
-  def commit_digest(digest)
-    if send("#{digest}_changed?")
-      save!
-    end
+  def log(msg)
+    TrackedFile.logger << log_message(msg)
   end
 
-  def rollback_digest(digest)
-    if send("#{digest}_changed?")
-      self.attributes = { digest => send("#{digest}_was") }
-    end
+  def log_message(msg)
+    [ DateTime.now.to_s(:iso8601), msg, path, size, sha1 ].join("\t") + "\n"
   end
 
 end
