@@ -27,9 +27,7 @@ RailsAdmin.config do |config|
 
   config.main_app_name = "DUL FileTracker v#{FileTracker::VERSION}"
 
-  config.navigation_static_links = {
-    'Queues' => '/queues',
-  }
+  config.navigation_static_links['Queues'] = '/queues'
 
   # Include empty fields on show views
   config.compact_show_view = false
