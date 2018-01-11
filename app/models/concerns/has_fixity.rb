@@ -8,12 +8,25 @@ module HasFixity
     assign_attributes(sha1: nil, size: nil)
   end
 
-  def set_digest(digest)
-    self.attributes = { digest => calculate_digest(digest) }
+  def fixity_s
+    "[%s %s]" % [size_s, sha1_s]
+  end
+
+  def size_s
+    size ? size.to_s : "-"
+  end
+
+  def sha1_s
+    sha1 || "-"
+  end
+
+  def set_fixity
+    set_size unless size?
+    set_sha1 unless sha1?
   end
 
   def set_sha1
-    set_digest :sha1
+    self.sha1 = calculate_sha1
   end
 
   def set_size
@@ -26,15 +39,10 @@ module HasFixity
     end
   end
 
-  def calculate_digest(digest)
-    digest_class = Digest.const_get(digest.to_s.upcase)
-    RetryOnError.wrap(RETRIABLE_IO_ERRORS, wait: 60) do
-      digest_class.file(path).hexdigest
-    end
-  end
-
   def calculate_sha1
-    calculate_digest :sha1
+    RetryOnError.wrap(RETRIABLE_IO_ERRORS, wait: 60) do
+      Digest::SHA1.file(path).hexdigest
+    end
   end
 
 end

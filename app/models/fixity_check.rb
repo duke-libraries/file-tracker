@@ -1,60 +1,38 @@
-class FixityCheck < ActiveRecord::Base
-
+class FixityCheck
+  include ActiveModel::Model
   include HasFixity
   include HasStatus
-  include FixityCheckAdmin
 
-  belongs_to :tracked_file
+  attr_accessor :tracked_file, :status, :size, :sha1, :started_at, :finished_at
 
-  validates_presence_of :started_at, :tracked_file
-  validates_inclusion_of :status, in: FileTracker::Status.values
+  define_model_callbacks :execute
+  before_execute { self.started_at = DateTime.now }
+  after_execute { self.finished_at = DateTime.now }
 
   delegate :path, to: :tracked_file
 
-  after_create :update_tracked_file
-  after_create :track_change, if: :track_change?
-
-  def self.call(tracked_file)
+  def self.call(tracked_file, **opts)
     new(tracked_file: tracked_file).tap do |fixity_check|
-      fixity_check.execute
+      fixity_check.execute(**opts)
     end
   end
 
-  FileTracker::Status.each do |key, value|
-    define_method "#{key}!" do |message = nil|
-      super()
-      self.message = message if message
+  def execute(**opts)
+    run_callbacks :execute do
+      check(**opts)
     end
   end
 
-  def execute
-    start
-    begin
-      check
-    ensure
-      finish
-    end
-  end
-
-  def start
-    self.started_at = DateTime.now
-  end
-
-  def finish
-    self.finished_at = DateTime.now
-    save!
-  end
-
-  def check
+  def check(**opts)
     begin
       check_size
-      check_sha1
+      check_sha1 unless opts[:only_size]
     rescue FileTracker::ModifiedFileError => e
-      modified!(e.message)
+      modified!
     rescue Errno::ENOENT => e # file does not exist
       missing!
     rescue Errno::EACCES => e # permissions issue
-      error!(e.inspect)
+      error!
     else
       ok!
     end
@@ -78,29 +56,6 @@ class FixityCheck < ActiveRecord::Base
                    expected: tracked_file.sha1,
                    actual: sha1)
     end
-  end
-
-  private
-
-  def update_tracked_file
-    tracked_file.update(fixity_checked_at: started_at, status: status)
-  end
-
-  def track_change?
-    modified? || missing?
-  end
-
-  def track_change
-    # We probably aren't concerned about creating duplicate changes
-    # because, under normal operation, a fixity check would not be
-    # executed on a file having a pending change (i.e., not
-    # currently OK).
-    TrackedChange.create!(tracked_file: tracked_file,
-                          change_type: status,
-                          size: size,
-                          sha1: sha1,
-                          discovered_at: started_at,
-                          message: message)
   end
 
 end

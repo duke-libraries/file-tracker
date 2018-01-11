@@ -15,82 +15,64 @@ RSpec.describe TrackedFile do
   end
 
   describe "create" do
+    subject { described_class.new(path: path) }
+    it "logs the file ADDED" do
+      expect(subject).to receive(:log).with("ADDED")
+      subject.save!
+    end
     describe "size calculation" do
       describe "when size is provided" do
         subject { described_class.new(path: path, size: size) }
         it "does not set the size" do
-          expect(subject).not_to receive(:size=)
-          subject.save!
+          expect { subject.save! }.not_to change(subject, :size)
         end
       end
       describe "when size is not provided" do
         subject { described_class.new(path: path) }
         it "sets the size" do
-          expect(subject).to receive(:size=).and_call_original
-          subject.save!
-          expect(subject.size).to eq size
+          expect { subject.save! }.to change(subject, :size).to(size)
         end
       end
-    end
-    describe "when the file size has changed" do
-      subject { described_class.new(path: path, size: size) }
-      before do
-        allow(File).to receive(:size).with(path) { 410225 }
-        subject.save!
-      end
-      it "tracks a modification" do
-        tracked_change = subject.tracked_changes.last
-        expect(tracked_change).to be_modification
-      end
-      it "marks the file as MODIFIED" do
-        subject.reload
-        expect(subject).to be_modified
-      end
-      it "does not set the SHA1" do
-        subject.reload
-        expect(subject.sha1).to be_nil
-      end
-    end
-    describe "when set_sha1 encounters a file not found error" do
-      subject { described_class.new(path: path, size: size) }
-      it "tracks a deletion" do
-        expect_any_instance_of(described_class).to receive(:set_digest).with("sha1").and_raise(Errno::ENOENT)
-        subject.save!
-        tracked_change = subject.tracked_changes.last
-        expect(tracked_change).to be_deletion
-      end
-      it "marks the file as MISSING" do
-        expect_any_instance_of(described_class).to receive(:set_digest).with("sha1").and_raise(Errno::ENOENT)
-        subject.save!
-        subject.reload
-        expect(subject).to be_missing
+      describe "sha1 calculation" do
+        describe "when sha1 is provided" do
+          subject { described_class.new(path: path, sha1: sha1) }
+          it "does not set the sha1" do
+            expect { subject.save! }.not_to change(subject, :sha1)
+          end
+        end
+        describe "when sha1 is not provided" do
+          subject { described_class.new(path: path) }
+          it "sets the sha1" do
+            expect { subject.save! }.to change(subject, :sha1).to(sha1)
+          end
+        end
       end
     end
   end # create
 
   describe "save" do
-    describe "SHA1 generation" do
+    describe "SHA1 re-calculation" do
       describe "when SHA1 is present" do
         subject { described_class.create(path: path, sha1: sha1) }
-        it "does not try to generate a SHA1" do
-          expect(subject).not_to receive(:generate_sha1)
-          subject.touch
-        end
-        describe "when explicitly calling #generate_sha1" do
-          it "does not generate a SHA1" do
-            expect(subject).not_to receive(:sha1=)
-            subject.generate_sha1
-          end
+        it "does not re-calculate a SHA1" do
+          expect { subject.touch; subject.save! }.not_to change(subject, :sha1)
         end
       end
       describe "when a SHA1 is not present" do
-        subject { described_class.new(path: path) }
-        it "generates a SHA1" do
-          subject.save!
-          subject.reload
-          expect(subject.sha1).to eq sha1
+        subject { described_class.create!(path: path) }
+        before { subject.sha1 = nil }
+        it "calculates a SHA1" do
+          expect { subject.save! }.to change(subject, :sha1).from(nil).to(sha1)
         end
       end
+    end
+  end
+
+  describe "#destroy" do
+    subject { described_class.create!(path: path, size: size, sha1: sha1) }
+    it "logs the file REMOVED" do
+      expect(subject).to receive(:log).with("REMOVED")
+      subject.destroy
     end
   end
 
@@ -112,200 +94,6 @@ RSpec.describe TrackedFile do
     end
     it "creates tracked files for new paths" do
       expect { described_class.track!(path1, path2, path3) }.to change(TrackedFile, :count).by(2)
-    end
-  end
-
-  describe "scopes" do
-    describe "not_ok" do
-      specify {
-        file = TrackedFile.create(path: path)
-        expect(TrackedFile.not_ok).not_to include file
-      }
-    end
-    describe "ok" do
-      specify {
-        file = TrackedFile.create(path: path)
-        file.status = FileTracker::Status::MODIFIED
-        file.save!
-        expect(TrackedFile.ok).not_to include file
-        file.status = FileTracker::Status::OK
-        file.save!
-        expect(TrackedFile.ok).to include file
-      }
-    end
-    describe "modified" do
-      specify {
-        file = TrackedFile.create(path: path)
-        expect(TrackedFile.modified).not_to include file
-        file.status = FileTracker::Status::MODIFIED
-        file.save!
-        expect(TrackedFile.modified).to include file
-      }
-    end
-    describe "missing" do
-      specify {
-        file = TrackedFile.create(path: path)
-        expect(TrackedFile.missing).not_to include file
-        file.status = FileTracker::Status::MISSING
-        file.save!
-        expect(TrackedFile.missing).to include file
-      }
-    end
-    describe "error" do
-      specify {
-        file = TrackedFile.create(path: path)
-        expect(TrackedFile.error).not_to include file
-        file.status = FileTracker::Status::ERROR
-        file.save!
-        expect(TrackedFile.error).to include file
-      }
-    end
-  end # scopes
-
-  describe "status value methods" do
-    subject { described_class.new(path: path) }
-    describe "when status is OK" do
-      it { is_expected.to be_ok }
-      it { is_expected.to_not be_modified }
-      it { is_expected.to_not be_missing }
-      it { is_expected.to_not be_error }
-    end
-    describe "when status is MODIFIED" do
-      before { subject.status = FileTracker::Status::MODIFIED }
-      it { is_expected.to_not be_ok }
-      it { is_expected.to be_modified }
-      it { is_expected.to_not be_missing }
-      it { is_expected.to_not be_error }
-    end
-    describe "when status is MISSING" do
-      before { subject.status = FileTracker::Status::MISSING }
-      it { is_expected.to_not be_ok }
-      it { is_expected.to_not be_modified }
-      it { is_expected.to be_missing }
-      it { is_expected.to_not be_error }
-    end
-    describe "when status is ERROR" do
-      before { subject.status = FileTracker::Status::ERROR }
-      it { is_expected.to_not be_ok }
-      it { is_expected.to_not be_modified }
-      it { is_expected.to_not be_missing }
-      it { is_expected.to be_error }
-    end
-    describe "ok!" do
-      specify {
-        subject.status = FileTracker::Status::MODIFIED
-        expect { subject.ok! }.to change(subject, :status).to(FileTracker::Status::OK)
-      }
-    end
-    describe "modified!" do
-      specify {
-        expect { subject.modified! }.to change(subject, :status).to(FileTracker::Status::MODIFIED)
-      }
-    end
-    describe "missing!" do
-      specify {
-        expect { subject.missing! }.to change(subject, :status).to(FileTracker::Status::MISSING)
-      }
-    end
-    describe "error!" do
-      specify {
-        expect { subject.error! }.to change(subject, :status).to(FileTracker::Status::ERROR)
-      }
-    end
-  end
-
-  describe "fixity checking boolean methods" do
-    subject { described_class.new(path: path) }
-    describe "fixity_checkable?" do
-      it { is_expected.to_not be_fixity_checkable }
-      describe "new record with a SHA1" do
-        before { subject.sha1 = sha1 }
-        it { is_expected.to_not be_fixity_checkable }
-      end
-      describe "persisted, after SHA1 generation" do
-        before do
-          subject.save!
-          subject.reload
-        end
-        it { is_expected.to be_fixity_checkable }
-        describe "and status is not OK" do
-          before do
-            subject.modified!
-            subject.save!
-          end
-          it { is_expected.to_not be_fixity_checkable }
-        end
-      end
-    end
-    describe "fixity_checked?" do
-      it { is_expected.to_not be_fixity_checked }
-      describe "persisted, after SHA1 generation" do
-        before do
-          subject.save!
-          subject.reload
-        end
-        it { is_expected.to_not be_fixity_checked }
-        describe "after a fixity check" do
-          before do
-            subject.check_fixity!
-            subject.reload
-          end
-          it { is_expected.to be_fixity_checked }
-        end
-      end
-    end
-    describe "fixity_check_due?" do
-      it { is_expected.to_not be_fixity_check_due }
-      describe "persisted, after SHA1 generation" do
-        before do
-          subject.save!
-          subject.reload
-        end
-        it { is_expected.to_not be_fixity_check_due }
-        describe "after a fixity check" do
-          before do
-            subject.check_fixity!
-            subject.reload
-          end
-          it { is_expected.to_not be_fixity_check_due }
-          describe "when the last fixity happened before the cutoff date" do
-            before do
-              allow(described_class).to receive(:fixity_check_cutoff_date) { DateTime.now }
-            end
-            it { is_expected.to be_fixity_check_due }
-          end
-        end
-      end
-    end
-    describe "check_fixity?" do
-      its(:check_fixity?) { is_expected.to be false }
-      describe "fixity checkable and not checked" do
-        before do
-          subject.save!
-          subject.reload
-        end
-        its(:check_fixity?) { is_expected.to be true }
-        describe "and status is not OK" do
-          before do
-            subject.modified!
-            subject.save!
-          end
-          its(:check_fixity?) { is_expected.to be false }
-        end
-        describe "after a fixity check" do
-          before do
-            subject.check_fixity!
-            subject.reload
-          end
-          its(:check_fixity?) { is_expected.to be false }
-          describe "when the last fixity happened before the cutoff date" do
-            before do
-              allow(described_class).to receive(:fixity_check_cutoff_date) { DateTime.now }
-            end
-            its(:check_fixity?) { is_expected.to be true }
-          end
-        end
-      end
     end
   end
 
@@ -358,46 +146,28 @@ RSpec.describe TrackedFile do
       end
     end
     describe "with an existing record" do
-      subject { described_class.create!(path: path, size: size) }
+      subject { described_class.create!(path: path, size: size, sha1: sha1) }
       describe "when the file size has not changed" do
         it "does nothing" do
-          expect { subject.track! }.not_to change { subject.tracked_changes.count }
+          expect { subject.track! }.not_to change { subject }
         end
       end
       describe "when the file size has changed" do
-        describe "and the status is MODIFIED" do
-          before { subject.modified! }
-          it "does nothing" do
-            expect { subject.track! }.not_to change { subject.tracked_changes.count }
-          end
+        before do
+          allow(File).to receive(:size).with(path) { 410225 }
         end
-        describe "and the status is MISSING" do
-          before { subject.missing! }
-          it "does nothing" do
-            expect { subject.track! }.not_to change { subject.tracked_changes.count }
-          end
+        it "changes the size" do
+          expect { subject.track! }.to change(subject, :size).to(410225)
         end
-        describe "and the status is OK" do
-          it "tracks the change" do
-            allow(subject).to receive(:calculate_size) { 410225 }
-            subject.track!
-            tracked_change = subject.tracked_changes.last
-            expect(tracked_change).to be_modification
-          end
-        end
-        describe "and the status is ERROR" do
-          before { subject.error! }
-          it "does nothing" do
-            expect { subject.track! }.not_to change { subject.tracked_changes.count }
-          end
+        it "logs a modification" do
+          expect(subject).to receive(:log).with("MODIFIED")
+          subject.track!
         end
       end # file size has changed
       describe "when the file is missing" do
-        it "tracks a deletion" do
+        it "destroys the file record" do
           allow(File).to receive(:size).with(path).and_raise(Errno::ENOENT)
-          subject.track!
-          tracked_change = subject.tracked_changes.last
-          expect(tracked_change).to be_deletion
+          expect(subject.track!).to be_destroyed
         end
       end
     end # existing record
@@ -407,36 +177,24 @@ RSpec.describe TrackedFile do
     subject {
       described_class.create!(path: path, size: size, sha1: sha1)
     }
-    its(:check_fixity!) { is_expected.to be_ok }
+    it "changes the fixity checked date" do
+      expect { subject.check_fixity! }.to change(subject, :fixity_checked_at)
+    end
     describe "when changed" do
       describe "when size has changed" do
         before do
           allow(File).to receive(:size).with(path) { 410225 }
         end
-        its(:check_fixity!) { is_expected.to be_modified }
-        describe "tracking the modification change" do
-          specify {
-            subject.check_fixity!
-            tracked_change = subject.tracked_changes.last
-            expect(tracked_change).to be_modification
-            expect(tracked_change.size).to eq 410225
-            expect(tracked_change.sha1).to be_nil
-          }
+        it "changes the size of the record" do
+          expect { subject.check_fixity! }.to change(subject, :size).to(410225)
         end
       end
       describe "when sha1 has changed" do
         before do
-          allow_any_instance_of(FixityCheck).to receive(:calculate_digest).with(:sha1) { "37781031df4573b90ef045889b7da0ab2655bf75" }
+          allow_any_instance_of(FixityCheck).to receive(:calculate_sha1) { "37781031df4573b90ef045889b7da0ab2655bf75" }
         end
-        its(:check_fixity!) { is_expected.to be_modified }
-        describe "tracking the modification change" do
-          specify {
-            subject.check_fixity!
-            tracked_change = subject.tracked_changes.last
-            expect(tracked_change).to be_modification
-            expect(tracked_change.size).to eq subject.size
-            expect(tracked_change.sha1).to eq "37781031df4573b90ef045889b7da0ab2655bf75"
-          }
+        it "changes the sha1 of the record" do
+          expect { subject.check_fixity! }.to change(subject, :sha1).to("37781031df4573b90ef045889b7da0ab2655bf75")
         end
       end
     end
@@ -451,17 +209,8 @@ RSpec.describe TrackedFile do
         subject
         File.unlink(path)
       end
-      it "sets the status to MISSING" do
-        expect { subject.check_fixity! }.to change(subject, :status).to(FileTracker::Status::MISSING)
-      end
-      describe "tracking the deletion" do
-        specify {
-          subject.check_fixity!
-          tracked_change = subject.tracked_changes.last
-          expect(tracked_change).to be_deletion
-          expect(tracked_change.size).to be_nil
-          expect(tracked_change.sha1).to be_nil
-        }
+      it "destroys the record" do
+        expect(subject.check_fixity!).to be_destroyed
       end
     end
     describe "when file is not readable" do
@@ -476,10 +225,10 @@ RSpec.describe TrackedFile do
       end
       after { File.unlink(path) }
       specify {
-        expect(subject.check_fixity!).to be_error
+        expect { subject.check_fixity! }.not_to change { subject }
       }
       it "doesn't track the error as a change" do
-        expect { subject.check_fixity! }.not_to change(subject.tracked_changes, :count)
+        expect { subject.check_fixity! }.not_to change { subject }
       end
     end
   end
@@ -510,21 +259,6 @@ RSpec.describe TrackedFile do
       describe "when size > large file threshhold" do
         let(:size) { 300 }
         it { is_expected.to be_large }
-      end
-    end
-  end
-
-  describe "resetting attributes" do
-    subject { described_class.new(path: path, sha1: sha1, size: size, status: 1) }
-    describe "#reset!" do
-      it "resets the SHA1" do
-        expect { subject.reset! }.to change(subject, :sha1).to(nil)
-      end
-      it "resets the size" do
-        expect { subject.reset! }.to change(subject, :size).to(nil)
-      end
-      it "resets the status" do
-        expect { subject.reset! }.to change(subject, :status).to(0)
       end
     end
   end

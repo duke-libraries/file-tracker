@@ -6,6 +6,7 @@ require 'file_tracker/status'
 require 'file_tracker/change'
 
 module FileTracker
+
   def self.configuration
     Configuration.instance
   end
@@ -13,4 +14,5 @@ module FileTracker
   def self.method_missing(name, *args, &block)
     configuration.send(name, *args, &block)
   end
+
 end

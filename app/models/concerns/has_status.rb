@@ -1,14 +1,6 @@
 module HasStatus
   extend ActiveSupport::Concern
 
-  included do
-    FileTracker::Status.each do |key, value|
-      scope key, ->{ where(status: value) }
-    end
-
-    scope :not_ok, ->{ where.not(status: FileTracker::Status::OK) }
-  end
-
   FileTracker::Status.each do |key, value|
     define_method "#{key}?" do
       status == value
@@ -17,6 +9,10 @@ module HasStatus
     define_method "#{key}!" do
       self.status = value
     end
+  end
+
+  def status_label
+    I18n.t "file_tracker.status.#{status}"
   end
 
 end

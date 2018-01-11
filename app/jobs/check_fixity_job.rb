@@ -6,7 +6,7 @@ class CheckFixityJob < ApplicationJob
 
   def self.perform(tracked_file_id)
     tracked_file = TrackedFile.find(tracked_file_id)
-    tracked_file.check_fixity! if tracked_file.check_fixity?
+    tracked_file.check_fixity!
   end
 
 end
