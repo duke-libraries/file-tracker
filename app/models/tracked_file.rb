@@ -19,7 +19,7 @@ class TrackedFile < ActiveRecord::Base
   end
 
   def self.check_fixity?
-    where("fixity_checked_at IS NULL OR fixity_checked_at < ?)", fixity_check_cutoff_date)
+    where("fixity_checked_at IS NULL OR fixity_checked_at < ?", fixity_check_cutoff_date)
   end
 
   def self.track!(*paths)
