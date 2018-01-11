@@ -1,5 +1,7 @@
 class TrackedFile < ActiveRecord::Base
 
+  LOGDEV = File.join(FileTracker.log_dir, "tracked-files.#{Rails.env}.log")
+
   include HasFixity
   include TrackedFileAdmin
 
@@ -15,7 +17,7 @@ class TrackedFile < ActiveRecord::Base
   scope :large, ->{ where("size >= ?", FileTracker.large_file_threshhold) }
 
   def self.logger
-    @logger ||= Logger.new(File.join(Rails.root, "log", "tracked-files.#{Rails.env}.log"), "weekly")
+    @logger ||= Logger.new(LOGDEV, FileTracker.log_shift_age)
   end
 
   def self.check_fixity?
