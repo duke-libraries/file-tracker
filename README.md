@@ -36,6 +36,7 @@ Resque pool config is in the usual location `config/resque-pool.yml`.
 Set variables in `config/application.yml`.  See the `figaro` gem documentation for details.
 
     BATCH_FIXITY_CHECK_LIMIT   Integer default maximum number of files to submit for fixity checking in a single batch (default: 100000).
+    CHECK_LAST_SEEN_PERIOD     Integer window of days outside of which fixity should be checked if not seen (default: 2)
     FILE_TRACKER_DB_PASS       Database user password (required for production)
     FILE_TRACKER_DB_USER       Database user name (default: `file_tracker`)
     FILE_TRACKER_LOG_DIR       Log directory for TrackedFile logger (default: Rails log directory)
@@ -62,4 +63,3 @@ Fixity check jobs will be created in two queues:
     fixity_large (file size > large file threshhold)
 
 Large files are handled in a separate queue for the sake of efficiency.
-
