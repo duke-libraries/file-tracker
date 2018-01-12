@@ -20,10 +20,6 @@ class TrackedFile < ActiveRecord::Base
     @logger ||= Logger.new(LOGDEV, FileTracker.log_shift_age)
   end
 
-  def self.check_fixity?
-    where("fixity_checked_at IS NULL OR fixity_checked_at < ?", fixity_check_cutoff_date)
-  end
-
   def self.track!(*paths)
     paths.each { |path| find_or_initialize_by(path: path).track! }
   end
@@ -32,10 +28,6 @@ class TrackedFile < ActiveRecord::Base
     return all if path.blank? || path == "/"
     value = path.sub(/\/\z/, "") # remove trailing slash
     where("path LIKE ?", "#{value}/%")
-  end
-
-  def self.fixity_check_cutoff_date
-    DateTime.now - FileTracker.fixity_check_period.days
   end
 
   def to_s
@@ -81,6 +73,8 @@ class TrackedFile < ActiveRecord::Base
       self.size = fixity_check.size
       self.sha1 = nil
       save!
+    else
+      touch
     end
     self
   end
