@@ -20,7 +20,7 @@ class BatchFixityCheck
 
   def tracked_files
     TrackedFile
-      .where("fixity_checked_at IS NULL OR update_at < ? OR fixity_checked_at < ?",
+      .where("fixity_checked_at IS NULL OR updated_at < ? OR fixity_checked_at < ?",
              check_last_seen_date, fixity_check_cutoff_date)
       .order(fixity_checked_at: :asc, created_at: :asc)
       .limit(max)
