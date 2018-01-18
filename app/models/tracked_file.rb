@@ -7,9 +7,7 @@ class TrackedFile < ActiveRecord::Base
 
   validates :path, file_exists: true, file_not_empty: true, readable: true, uniqueness: true, on: :create
 
-  before_update if: :fixity_changed? do
-    log("MODIFIED")
-  end
+  around_update :log_modified, if: :fixity_changed?
   before_save :set_fixity
   after_create { log("ADDED") }
   after_destroy { log("REMOVED") }
@@ -62,7 +60,14 @@ class TrackedFile < ActiveRecord::Base
   end
 
   def track!
-    new_record? ? save! : check_size!
+    if new_record?
+      unless save
+        msg = errors.full_messages.join("; ")
+        log("ERROR", msg)
+      end
+    else
+      check_size!
+    end
   end
 
   def check_size!
@@ -81,12 +86,22 @@ class TrackedFile < ActiveRecord::Base
 
   private
 
-  def log(msg)
-    TrackedFile.logger << log_message(msg)
+  def log(tag, msg = nil)
+    TrackedFile.logger << log_message(tag, msg)
   end
 
-  def log_message(msg)
-    [ DateTime.now.to_s(:iso8601), msg, path, size, sha1 ].join("\t") + "\n"
+  def log_message(tag, msg = nil)
+    [ log_date, tag, path, size_s, sha1_s, msg ].join("\t") + "\n"
+  end
+
+  def log_date
+    DateTime.now.to_s(:iso8601)
+  end
+
+  def log_modified
+    msg = "Was: [#{size_was} #{sha1_was}]"
+    yield
+    log("MODIFIED", msg)
   end
 
 end
