@@ -160,7 +160,7 @@ RSpec.describe TrackedFile do
           expect { subject.track! }.to change(subject, :size).to(410225)
         end
         it "logs a modification" do
-          expect(subject).to receive(:log).with("MODIFIED")
+          expect(subject).to receive(:log).with("MODIFIED", "Was: [#{size} #{sha1}]")
           subject.track!
         end
       end # file size has changed
