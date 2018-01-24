@@ -8,17 +8,47 @@ RSpec.describe TrackedFile do
 
   describe "tracked_directory" do
     subject { described_class.new(path: path) }
-    specify {
-      dir = TrackedDirectory.create!(path: fixture_path)
-      expect(subject.tracked_directory).to eq dir
-    }
+    let!(:dir) { TrackedDirectory.create!(path: fixture_path) }
+    its(:tracked_directory) { is_expected.to eq dir }
   end
 
   describe "create" do
-    subject { described_class.new(path: path) }
-    it "logs the file ADDED" do
-      expect(subject).to receive(:log).with("ADDED")
-      subject.save!
+    describe "when it has not moved" do
+      subject { described_class.new(path: path) }
+      it "logs the file as ADDED" do
+        expect(subject).to receive(:log).with(:added)
+        subject.save!
+      end
+    end
+    describe "when it has moved" do
+      let(:dir) { TrackedDirectory.create!(path: Dir.mktmpdir) }
+      let(:path1) { Tempfile.create("file-", dir.path).path }
+      let(:path2) { Tempfile.create("file-", dir.path).path }
+      subject { described_class.new(path: path1) }
+      before do
+        File.open(path2, "wb") { |f| f.write(SecureRandom.gen_random(100)) }
+        described_class.create!(path: path2)
+        FileUtils.mv(path2, path1)
+      end
+      describe "and move tracking is enabled" do
+        before do
+          allow(FileTracker).to receive(:track_moves) { true }
+        end
+        it "logs the file as MOVED" do
+          expect(subject).to receive(:log).with(:moved, "Probably moved from: #{path2}")
+          subject.save!
+        end
+      end
+      describe "and move tracking is disabled" do
+        before do
+          allow(FileTracker).to receive(:track_moves) { false }
+        end
+        it "logs the file as ADDED" do
+          expect(subject).to receive(:log).with(:added)
+          subject.save!
+        end
+      end
+      after { FileUtils.remove_entry_secure(dir.path) }
     end
     describe "size calculation" do
       describe "when size is provided" do
@@ -50,7 +80,7 @@ RSpec.describe TrackedFile do
     end
   end # create
 
-  describe "save" do
+  describe "update" do
     describe "SHA1 re-calculation" do
       describe "when SHA1 is present" do
         subject { described_class.create(path: path, sha1: sha1) }
@@ -69,10 +99,43 @@ RSpec.describe TrackedFile do
   end
 
   describe "#destroy" do
-    subject { described_class.create!(path: path, size: size, sha1: sha1) }
-    it "logs the file REMOVED" do
-      expect(subject).to receive(:log).with("REMOVED")
-      subject.destroy
+    describe "when the file has not moved" do
+      subject { described_class.create!(path: path, size: size, sha1: sha1) }
+      it "logs the file as REMOVED" do
+        expect(subject).to receive(:log).with(:removed)
+        subject.destroy
+      end
+    end
+    describe "when the file has moved" do
+      let(:dir) { TrackedDirectory.create!(path: Dir.mktmpdir) }
+      let(:path1) { Tempfile.create("file-", dir.path).path }
+      let(:path2) { Tempfile.create("file-", dir.path).path }
+      subject { described_class.create!(path: path1) }
+      before do
+        File.open(path1, "wb") { |f| f.write(SecureRandom.gen_random(100)) }
+        subject.touch
+        FileUtils.mv(path1, path2)
+        described_class.create!(path: path2)
+      end
+      describe "and move tracking is enabled" do
+        before do
+          allow(FileTracker).to receive(:track_moves) { true }
+        end
+        it "logs the file as MOVED" do
+          expect(subject).to receive(:log).with(:moved, "Probably moved to: #{path2}")
+          subject.destroy
+        end
+      end
+      describe "and move tracking is disabled" do
+        before do
+          allow(FileTracker).to receive(:track_moves) { false }
+        end
+        it "logs the file as REMOVED" do
+          expect(subject).to receive(:log).with(:removed)
+          subject.destroy
+        end
+      end
+      after { FileUtils.remove_entry_secure(dir.path) }
     end
   end
 
@@ -160,7 +223,7 @@ RSpec.describe TrackedFile do
           expect { subject.track! }.to change(subject, :size).to(410225)
         end
         it "logs a modification" do
-          expect(subject).to receive(:log).with("MODIFIED", "Was: [#{size} #{sha1}]")
+          expect(subject).to receive(:log).with(:modified, "SHA1 was: #{sha1}")
           subject.track!
         end
       end # file size has changed
@@ -235,7 +298,7 @@ RSpec.describe TrackedFile do
 
   describe "#large?" do
     before do
-      allow(FileTracker.configuration).to receive(:large_file_threshhold) { 200 }
+      allow(FileTracker).to receive(:large_file_threshhold) { 200 }
     end
     describe "when size is nil" do
       subject { described_class.new(path: path) }

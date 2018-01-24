@@ -83,3 +83,6 @@ Rails.application.configure do
 end
 
 RailsAdmin.config.navigation_static_links["Log"] = "/log"
+
+require 'resque'
+Resque.redis.namespace = FileTracker.redis_namespace

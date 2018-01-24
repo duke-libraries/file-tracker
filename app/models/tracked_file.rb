@@ -9,8 +9,8 @@ class TrackedFile < ActiveRecord::Base
 
   around_update :log_modified, if: :fixity_changed?
   before_save :set_fixity
-  after_create { log("ADDED") }
-  after_destroy { log("REMOVED") }
+  after_create :log_created
+  after_destroy :log_destroyed
 
   scope :large, ->{ where("size >= ?", FileTracker.large_file_threshhold) }
 
@@ -84,10 +84,22 @@ class TrackedFile < ActiveRecord::Base
     self
   end
 
+  def identical_files
+    tracked_directory.tracked_files.where("sha1 = ? and path != ?", sha1, path) rescue nil
+  end
+
+  def exist?
+    File.exist?(path)
+  end
+
+  def removed?
+    !exist?
+  end
+
   private
 
   def log(tag, msg = nil)
-    TrackedFile.logger << log_message(tag, msg)
+    TrackedFile.logger << log_message(I18n.t("file_tracker.log.tag.#{tag}"), msg)
   end
 
   def log_message(tag, msg = nil)
@@ -99,9 +111,47 @@ class TrackedFile < ActiveRecord::Base
   end
 
   def log_modified
-    msg = "Was: [#{size_was} #{sha1_was}]"
+    msg = I18n.t("file_tracker.log.message.modified") % sha1_was
     yield
-    log("MODIFIED", msg)
+    log(:modified, msg)
+  end
+
+  def log_created
+    if FileTracker.track_moves && other_file = moved_from
+      msg = I18n.t("file_tracker.log.message.moved_from") % other_file.path
+      log(:moved, msg)
+      other_file.destroy
+    else
+      log(:added)
+    end
+  end
+
+  def log_destroyed
+    if FileTracker.track_moves && other_file = moved_to
+      msg = I18n.t("file_tracker.log.message.moved_to") % other_file.path
+      log(:moved, msg)
+    else
+      log(:removed)
+    end
+  end
+
+  def only_identical_file
+    other_files = identical_files.to_a
+    other_files.length == 1 && other_files.first
+  end
+
+  def moved_from
+    return false unless persisted?
+    if other_file = only_identical_file
+      other_file.removed? && other_file
+    end
+  end
+
+  def moved_to
+    return false unless destroyed?
+    if other_file = only_identical_file
+      other_file.exist? && other_file
+    end
   end
 
 end
