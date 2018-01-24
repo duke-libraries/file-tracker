@@ -27,6 +27,17 @@ en:
       modification:
         size: "Expected size: %{expected}; actual size: %{actual}."
         sha1: "Expected SHA1 {%{expected}}; actual SHA1 {%{actual}}."
+    log:
+      tag:
+        added: ADDED
+        error: ERROR
+        modified: MODIFIED
+        moved: MOVED
+        removed: REMOVED
+      message:        
+        modified: "SHA1 was: %s"
+        moved_to: "Probably moved to: %s"
+        moved_from: "Probably moved from: %s"
     status:
       :0: OK
       :1: MODIFIED

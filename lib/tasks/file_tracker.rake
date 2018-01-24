@@ -47,13 +47,6 @@ EOS
     end
   end
 
-  desc "List status codes and translations."
-  task :status => :environment do
-    FileTracker::Status.values.each do |value|
-      puts [ value.to_s, I18n.t("file_tracker.status.#{value}") ].join("\t")
-    end
-  end
-
   desc "Run the batch fixity check routine, optionally overriding the default limit (#{FileTracker.batch_fixity_check_limit})."
   task :fixity, [:max] => :environment do |t, args|
     Resque.enqueue(BatchFixityCheckJob, args[:max])
