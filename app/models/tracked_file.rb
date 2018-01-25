@@ -63,7 +63,7 @@ class TrackedFile < ActiveRecord::Base
     if new_record?
       unless save
         msg = errors.full_messages.join("; ")
-        log("ERROR", msg)
+        log(:error, msg)
       end
     else
       check_size!
