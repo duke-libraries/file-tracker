@@ -6,7 +6,7 @@ git_source(:github) do |repo_name|
 end
 
 gem 'sqlite3'
-gem 'rails', '~> 5.1.3'
+gem 'rails', '~> 5.1.6'
 gem 'puma', '~> 3.7'
 gem 'jbuilder', '~> 2.5'
 gem 'figaro'
@@ -20,7 +20,7 @@ gem 'resque', '~> 1.27'
 gem 'resque-web', require: 'resque_web'
 gem 'resque-pool'
 
-gem 'rails_admin', '~> 1.2'
+gem 'rails_admin', '~> 1.3.0'
 
 group :development, :test do
   gem 'byebug'
