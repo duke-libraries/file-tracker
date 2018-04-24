@@ -82,7 +82,10 @@ Rails.application.configure do
   config.active_record.dump_schema_after_migration = false
 end
 
-RailsAdmin.config.navigation_static_links["Log"] = "/log"
+RailsAdmin.config do |config|
+  config.navigation_static_links["Log"] = "/log"
+  config.navigation_static_links["Reports"] = "/reports"
+end
 
 require 'resque'
 Resque.redis.namespace = FileTracker.redis_namespace
