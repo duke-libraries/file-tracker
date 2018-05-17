@@ -7,7 +7,6 @@ end
 
 gem 'sqlite3'
 gem 'rails', '~> 5.1.6'
-gem 'puma', '~> 3.7'
 gem 'jbuilder', '~> 2.5'
 gem 'figaro'
 gem 'devise'
@@ -23,6 +22,7 @@ gem 'resque-pool'
 gem 'rails_admin', '~> 1.3.0'
 
 group :development, :test do
+  gem 'puma', '~> 3.7'
   gem 'byebug'
   gem 'rspec-rails'
   gem 'rspec-its'
@@ -32,6 +32,7 @@ end
 group :production do
   gem 'mysql2'
   gem 'therubyracer', require: 'v8'
+  gem 'passenger'
 end
 
 group :development do
