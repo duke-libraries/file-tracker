@@ -1,3 +1,3 @@
 module FileTracker
-  VERSION = "2.2.5"
+  VERSION = "2.3.0"
 end
