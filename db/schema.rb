@@ -29,7 +29,7 @@ ActiveRecord::Schema.define(version: 20180111025904) do
     t.datetime "updated_at", null: false
     t.index ["created_at"], name: "index_tracked_files_on_created_at"
     t.index ["fixity_checked_at"], name: "index_tracked_files_on_fixity_checked_at"
-    t.index ["path"], name: "index_tracked_files_on_path"
+    t.index ["path"], name: "index_tracked_files_on_path", length: 255
     t.index ["sha1"], name: "index_tracked_files_on_sha1"
     t.index ["size"], name: "index_tracked_files_on_size"
     t.index ["updated_at"], name: "index_tracked_files_on_updated_at"
