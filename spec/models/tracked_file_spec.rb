@@ -30,23 +30,9 @@ RSpec.describe TrackedFile do
         described_class.create!(path: path2)
         FileUtils.mv(path2, path1)
       end
-      describe "and move tracking is enabled" do
-        before do
-          allow(FileTracker).to receive(:track_moves) { true }
-        end
-        it "logs the file as MOVED" do
-          expect(subject).to receive(:log).with(:moved, "Probably moved from: #{path2}")
-          subject.save!
-        end
-      end
-      describe "and move tracking is disabled" do
-        before do
-          allow(FileTracker).to receive(:track_moves) { false }
-        end
-        it "logs the file as ADDED" do
-          expect(subject).to receive(:log).with(:added)
-          subject.save!
-        end
+      it "logs the file as MOVED" do
+        expect(subject).to receive(:log).with(:moved, "Probably moved from: #{path2}")
+        subject.save!
       end
       after { FileUtils.remove_entry_secure(dir.path) }
     end
@@ -117,23 +103,9 @@ RSpec.describe TrackedFile do
         FileUtils.mv(path1, path2)
         described_class.create!(path: path2)
       end
-      describe "and move tracking is enabled" do
-        before do
-          allow(FileTracker).to receive(:track_moves) { true }
-        end
-        it "logs the file as MOVED" do
-          expect(subject).to receive(:log).with(:moved, "Probably moved to: #{path2}")
-          subject.destroy
-        end
-      end
-      describe "and move tracking is disabled" do
-        before do
-          allow(FileTracker).to receive(:track_moves) { false }
-        end
-        it "logs the file as REMOVED" do
-          expect(subject).to receive(:log).with(:removed)
-          subject.destroy
-        end
+      it "logs the file as MOVED" do
+        expect(subject).to receive(:log).with(:moved, "Probably moved to: #{path2}")
+        subject.destroy
       end
       after { FileUtils.remove_entry_secure(dir.path) }
     end

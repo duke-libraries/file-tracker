@@ -41,7 +41,6 @@ Set variables in `config/application.yml`.  See the `figaro` gem documentation f
     FILE_TRACKER_DB_USER       Database user name (default: `file_tracker`)
     FILE_TRACKER_LOG_DIR       Log directory for TrackedFile logger (default: Rails log directory)
     FILE_TRACKER_LOG_SHIFT_AGE Log shift age for TrackedFile logger (default: weekly; see Ruby Logger documentation)
-    FILE_TRACKER_TRACK_MOVES   Set to enable tracking of (probably) file moving within a tracked directory (default: false [not set])
     FIXITY_CHECK_PERIOD        Integer number of days after which fixity should be re-checked (default: 60)
     LARGE_FILE_THRESHHOLD      Integer byte size, above which a file is considered "large" for purposes of job queueing (default: 1000000000 [= 1GB])
 
