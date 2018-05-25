@@ -117,7 +117,7 @@ class TrackedFile < ActiveRecord::Base
   end
 
   def log_created
-    if FileTracker.track_moves && other_file = moved_from
+    if other_file = moved_from
       msg = I18n.t("file_tracker.log.message.moved_from") % other_file.path
       log(:moved, msg)
       other_file.destroy
@@ -127,7 +127,7 @@ class TrackedFile < ActiveRecord::Base
   end
 
   def log_destroyed
-    if FileTracker.track_moves && other_file = moved_to
+    if other_file = moved_to
       msg = I18n.t("file_tracker.log.message.moved_to") % other_file.path
       log(:moved, msg)
     else

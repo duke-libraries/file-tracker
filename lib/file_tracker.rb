@@ -5,10 +5,6 @@ require 'file_tracker/status'
 
 module FileTracker
 
-  mattr_accessor :after_sign_out_path do
-    ENV.fetch("AFTER_SIGN_OUT_PATH", "/")
-  end
-
   mattr_accessor :batch_fixity_check_limit do
     ENV.fetch("BATCH_FIXITY_CHECK_LIMIT", 10**5).to_i
   end
@@ -35,10 +31,6 @@ module FileTracker
 
   mattr_accessor :redis_namespace do
     ENV.fetch("REDIS_NAMESPACE", "resque:FileTracker")
-  end
-
-  mattr_accessor :track_moves do
-    !!ENV.fetch("FILE_TRACKER_TRACK_MOVES", false)
   end
 
 end
