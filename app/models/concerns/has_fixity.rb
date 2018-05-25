@@ -2,7 +2,7 @@ require 'digest'
 
 module HasFixity
 
-  RETRIABLE_IO_ERRORS = [ Errno::EAGAIN, Errno::EBADF, Errno::EIO, Errno::EBUSY ]
+  RETRIABLE_IO_ERRORS = [ Errno::EAGAIN, Errno::EBADF, Errno::EIO, Errno::EBUSY, Errno::EHOSTDOWN ]
 
   def reset_fixity
     assign_attributes(sha1: nil, size: nil)
