@@ -31,7 +31,10 @@ class TrackedDirectory < ActiveRecord::Base
   def track
     IO.popen(["find", path, "-type", "f", "-not", "-empty"]) do |io|
       while io.gets
-        Resque.enqueue(TrackFileJob, $_.chomp)
+        file_path = $_.chomp
+        tf = TrackedFile.new(path: file_path, size: File.size(file_path))
+        queue = TrackFileJob.queue_for_tracked_file(tf)
+        Resque.enqueue_to(queue, TrackFileJob, file_path)
       end
     end
   end
