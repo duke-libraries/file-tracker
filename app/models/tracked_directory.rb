@@ -1,3 +1,5 @@
+require 'find'
+
 class TrackedDirectory < ActiveRecord::Base
 
   include TrackedDirectoryAdmin
@@ -29,23 +31,23 @@ class TrackedDirectory < ActiveRecord::Base
   end
 
   def track
-    IO.popen(["find", path, "-type", "f", "-not", "-empty"]) do |io|
-      while io.gets
-        file_path = $_.chomp
-        tf = TrackedFile.new(path: file_path)
-        begin
-          tf.set_size
-        rescue Errno::EINVAL, Errno::ENOENT => e
-          tf.log(:error, e.message)
-        else
-          queue = TrackFileJob.queue_for_tracked_file(tf)
-          Resque.enqueue_to(queue, TrackFileJob, file_path)
-        end
+    Find.find(path) do |f|
+      if File.file?(f) && !File.symlink?(f)
+        track_path(f)
+      else
+        next
       end
     end
   end
 
   private
+
+  def track_path(file_path)
+    tf = TrackedFile.new(path: file_path)
+    tf.set_size
+    queue = TrackFileJob.queue_for_tracked_file(tf)
+    Resque.enqueue_to(queue, TrackFileJob, file_path)
+  end
 
   def normalize_path!
     self.path = File.realdirpath(path)
