@@ -10,9 +10,6 @@ module TrackedFileAdmin
         field :created_at do
           date_format :short
         end
-        # field :status do
-        #   pretty_value { I18n.t("file_tracker.status.#{value}") }
-        # end
         field :size do
           pretty_value { ActiveSupport::NumberHelper.number_to_human_size(value) }
         end
@@ -28,9 +25,6 @@ module TrackedFileAdmin
         field :updated_at do
           date_format :long
         end
-        # field :status do
-        #   pretty_value { I18n.t("file_tracker.status.#{value}") }
-        # end
         field :fixity_checked_at do
           date_format :long
         end
