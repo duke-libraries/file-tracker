@@ -1,6 +1,13 @@
 require 'file_tracker'
 
 namespace :file_tracker do
+
+  desc "Quickly track all known files."
+  task :quick_track => :environment do
+    Resque.enqueue(QuickTrackJob)
+    puts "Quick track job enqueued."
+  end
+
   desc "Inventory all tracked directories, or single directory by ID."
   task :inventory, [:id] => :environment do |t, args|
     if args[:id]
