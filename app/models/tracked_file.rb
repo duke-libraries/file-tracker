@@ -96,11 +96,11 @@ class TrackedFile < ActiveRecord::Base
     !exist?
   end
 
-  private
-
   def log(tag, msg = nil)
     TrackedFile.logger << log_message(I18n.t("file_tracker.log.tag.#{tag}"), msg)
   end
+
+  private
 
   def log_message(tag, msg = nil)
     [ log_date, tag, path, size_s, sha1_s, msg ].join("\t") + "\n"

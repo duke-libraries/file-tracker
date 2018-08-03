@@ -33,9 +33,14 @@ class TrackedDirectory < ActiveRecord::Base
       while io.gets
         file_path = $_.chomp
         tf = TrackedFile.new(path: file_path)
-        tf.set_size
-        queue = TrackFileJob.queue_for_tracked_file(tf)
-        Resque.enqueue_to(queue, TrackFileJob, file_path)
+        begin
+          tf.set_size
+        rescue Errno::EINVAL => e
+          tf.log(:error, e.message)
+        else
+          queue = TrackFileJob.queue_for_tracked_file(tf)
+          Resque.enqueue_to(queue, TrackFileJob, file_path)
+        end
       end
     end
   end
