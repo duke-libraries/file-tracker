@@ -35,7 +35,7 @@ class TrackedDirectory < ActiveRecord::Base
         tf = TrackedFile.new(path: file_path)
         begin
           tf.set_size
-        rescue Errno::EINVAL => e
+        rescue Errno::EINVAL, Errno::ENOENT => e
           tf.log(:error, e.message)
         else
           queue = TrackFileJob.queue_for_tracked_file(tf)
