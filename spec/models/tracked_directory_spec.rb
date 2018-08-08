@@ -3,16 +3,49 @@ require 'rails_helper'
 RSpec.describe TrackedDirectory do
 
   describe "file tracking" do
+
     let(:path) { fixture_path }
     subject { described_class.create!(path: path) }
-    before { subject.track! }
-    it "tracks files" do
-      file = File.join(subject.path, "nypl.jpg")
-      expect(subject.tracked_files.pluck(:path)).to include(file)
+
+    describe "normal operation" do
+      before { subject.track! }
+
+      it "tracks files" do
+        file = File.join(subject.path, "nypl.jpg")
+        expect(subject.tracked_files.pluck(:path)).to include(file)
+      end
+      it "tracks subdirectories" do
+        file = File.join(subject.path, "subdir", "lorem_ipsum.txt")
+        expect(subject.tracked_files.pluck(:path)).to include(file)
+      end
+      it "excludes empty files" do
+        empty_file = File.join(subject.path, "empty.txt")
+        expect(subject.tracked_files.pluck(:path)).not_to include(empty_file)
+      end
     end
-    it "excludes empty files" do
-      empty_file = File.join(subject.path, "empty.txt")
-      expect(subject.tracked_files.pluck(:path)).not_to include(empty_file)
+
+    describe "error handling" do
+      let(:file) { File.join(subject.path, "nypl.jpg") }
+
+      describe "fatal error" do
+        before do
+          allow(File).to receive(:size) { 100 }
+          allow(File).to receive(:size).with(file).and_raise(Errno::ENOENT)
+        end
+        it "rescues from the error" do
+          expect { subject.track! }.not_to raise_error
+        end
+      end
+
+      describe "other error" do
+        before do
+          allow(File).to receive(:size) { 100 }
+          allow(File).to receive(:size).with(file).and_raise(StandardError)
+        end
+        it "raise the error" do
+          expect { subject.track! }.to raise_error(StandardError)
+        end
+      end
     end
   end
 
