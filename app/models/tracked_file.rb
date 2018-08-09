@@ -5,11 +5,12 @@ class TrackedFile < ActiveRecord::Base
   include HasFixity
   include TrackedFileAdmin
 
-  validates :path, file_exists: true, file_not_empty: true, readable: true, uniqueness: true, on: :create
+  validates :path, file_exists: true, readable: true, uniqueness: true, on: :create
 
   around_update :log_modified, if: :fixity_changed?
   before_save :set_fixity
   after_create :log_created
+  after_save :warn_empty, if: :empty?
   after_destroy :log_destroyed
 
   scope :large, ->{ where("size >= ?", FileTracker.large_file_threshhold) }
@@ -92,6 +93,10 @@ class TrackedFile < ActiveRecord::Base
     File.exist?(path)
   end
 
+  def empty?
+    size == 0
+  end
+
   def removed?
     !exist?
   end
@@ -142,6 +147,7 @@ class TrackedFile < ActiveRecord::Base
 
   def moved_from
     return false unless persisted?
+    return false if empty?
     if other_file = only_identical_file
       other_file.removed? && other_file
     end
@@ -149,9 +155,14 @@ class TrackedFile < ActiveRecord::Base
 
   def moved_to
     return false unless destroyed?
+    return false if empty?
     if other_file = only_identical_file
       other_file.exist? && other_file
     end
+  end
+
+  def warn_empty
+    logger.warn("Empty file: #{self.inspect}")
   end
 
 end

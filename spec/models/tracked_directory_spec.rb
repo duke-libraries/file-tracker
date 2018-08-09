@@ -18,9 +18,9 @@ RSpec.describe TrackedDirectory do
         file = File.join(subject.path, "subdir", "lorem_ipsum.txt")
         expect(subject.tracked_files.pluck(:path)).to include(file)
       end
-      it "excludes empty files" do
+      it "includes empty files" do
         empty_file = File.join(subject.path, "empty.txt")
-        expect(subject.tracked_files.pluck(:path)).not_to include(empty_file)
+        expect(subject.tracked_files.pluck(:path)).to include(empty_file)
       end
     end
 

@@ -25,16 +25,29 @@ RSpec.describe TrackedFile do
       let(:path1) { Tempfile.create("file-", dir.path).path }
       let(:path2) { Tempfile.create("file-", dir.path).path }
       subject { described_class.new(path: path1) }
-      before do
-        File.open(path2, "wb") { |f| f.write(SecureRandom.gen_random(100)) }
-        described_class.create!(path: path2)
-        FileUtils.mv(path2, path1)
-      end
-      it "logs the file as MOVED" do
-        expect(subject).to receive(:log).with(:moved, "Probably moved from: #{path2}")
-        subject.save!
-      end
       after { FileUtils.remove_entry_secure(dir.path) }
+      describe "and the file is not empty" do
+        before do
+          File.open(path2, "wb") { |f| f.write(SecureRandom.gen_random(100)) }
+          described_class.create!(path: path2)
+          FileUtils.mv(path2, path1)
+        end
+        it "logs the file as MOVED" do
+          expect(subject).to receive(:log).with(:moved, "Probably moved from: #{path2}")
+          subject.save!
+        end
+      end
+
+      describe "and the file is empty" do
+        before do
+          described_class.create!(path: path2)
+          FileUtils.mv(path2, path1)
+        end
+        it "logs the file as ADDED" do
+          expect(subject).to receive(:log).with(:added)
+          subject.save!
+        end
+      end
     end
     describe "size calculation" do
       describe "when size is provided" do
@@ -97,17 +110,31 @@ RSpec.describe TrackedFile do
       let(:path1) { Tempfile.create("file-", dir.path).path }
       let(:path2) { Tempfile.create("file-", dir.path).path }
       subject { described_class.create!(path: path1) }
-      before do
-        File.open(path1, "wb") { |f| f.write(SecureRandom.gen_random(100)) }
-        subject.touch
-        FileUtils.mv(path1, path2)
-        described_class.create!(path: path2)
-      end
-      it "logs the file as MOVED" do
-        expect(subject).to receive(:log).with(:moved, "Probably moved to: #{path2}")
-        subject.destroy
-      end
       after { FileUtils.remove_entry_secure(dir.path) }
+      describe "and the file is not empty" do
+        before do
+          File.open(path1, "wb") { |f| f.write(SecureRandom.gen_random(100)) }
+          subject.touch
+          FileUtils.mv(path1, path2)
+          described_class.create!(path: path2)
+        end
+        it "logs the file as MOVED" do
+          expect(subject).to receive(:log).with(:moved, "Probably moved to: #{path2}")
+          subject.destroy
+        end
+      end
+
+      describe "and the file is empty" do
+        before do
+          subject.touch
+          FileUtils.mv(path1, path2)
+          described_class.create!(path: path2)
+        end
+        it "logs the file as REMOVED" do
+          expect(subject).to receive(:log).with(:removed)
+          subject.destroy
+        end
+      end
     end
   end
 
@@ -168,7 +195,7 @@ RSpec.describe TrackedFile do
       end
       describe "that is empty" do
         before { File.truncate(path, 0) }
-        it { is_expected.to be_invalid }
+        it { is_expected.to be_valid }
       end
     end
   end
