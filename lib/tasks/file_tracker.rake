@@ -10,13 +10,8 @@ namespace :file_tracker do
 
   desc "Inventory all tracked directories, or single directory by ID."
   task :inventory, [:id] => :environment do |t, args|
-    if args[:id]
-      Resque.enqueue(TrackDirectoryJob, args[:id])
-      puts "TrackDirectoryJob enqueued."
-    else
-      Resque.enqueue(InventoryJob)
-      puts "Inventory job enqueued."
-    end
+    Resque.enqueue(InventoryJob, args[:id])
+    puts "Inventory job enqueued."
   end
 
   desc "Print application version."

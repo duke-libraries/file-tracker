@@ -22,7 +22,7 @@ module FileTracker
   end
 
   mattr_accessor :log_dir do
-    ENV.fetch("FILE_TRACKER_LOG_DIR", File.join(Rails.root, "log"))
+    ENV.fetch("FILE_TRACKER_LOG_DIR", Rails.root.join("log"))
   end
 
   mattr_accessor :log_shift_age do
@@ -31,6 +31,10 @@ module FileTracker
 
   mattr_accessor :redis_namespace do
     ENV.fetch("REDIS_NAMESPACE", "resque:FileTracker")
+  end
+
+  mattr_accessor :log_file_errors do
+    [ Errno::EINVAL, Errno::ENOENT, Errno::EACCES ]
   end
 
 end

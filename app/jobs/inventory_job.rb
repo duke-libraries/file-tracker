@@ -1,8 +1,10 @@
 class InventoryJob < BatchJob
 
-  def self.perform
-    TrackedDirectory.all.each do |tracked_dir|
-      Resque.enqueue(TrackDirectoryJob, tracked_dir.id)
+  def self.perform(id = nil)
+    if id
+      TrackDirectoryJob.enqueue_directory(TrackedDirectory.find(id))
+    else
+      TrackedDirectory.find_each { |dir| TrackDirectoryJob.enqueue_directory(dir) }
     end
   end
 
