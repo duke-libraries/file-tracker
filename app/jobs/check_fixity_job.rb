@@ -9,4 +9,8 @@ class CheckFixityJob < ApplicationJob
     tracked_file.check_fixity!
   end
 
+  def self.enqueue(tracked_file)
+    Resque.enqueue_to(queue_for_tracked_file(tracked_file), self, tracked_file.id)
+  end
+
 end

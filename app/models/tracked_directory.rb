@@ -2,8 +2,6 @@ require 'find'
 
 class TrackedDirectory < ActiveRecord::Base
 
-  FATAL_ERRORS = [ Errno::EINVAL, Errno::ENOENT, Errno::EACCES ]
-
   include TrackedDirectoryAdmin
 
   before_validation :normalize_path!
@@ -27,32 +25,12 @@ class TrackedDirectory < ActiveRecord::Base
 
   def track!
     self.tracked_at = DateTime.now
-    track
+    Resque.enqueue(TrackDirectoryJob, path)
     save!
     self
   end
 
-  def track
-    Find.find(path) do |f|
-      if File.file?(f) && !File.symlink?(f)
-        track_path(f)
-      end
-    end
-  end
-
   private
-
-  def track_path(file_path)
-    tf = TrackedFile.new(path: file_path)
-    begin
-      tf.set_size
-    rescue *FATAL_ERRORS => e
-      tf.log(:error, e.message)
-    else
-      queue = TrackFileJob.queue_for_tracked_file(tf)
-      Resque.enqueue_to(queue, TrackFileJob, file_path)
-    end
-  end
 
   def normalize_path!
     self.path = File.realdirpath(path)
