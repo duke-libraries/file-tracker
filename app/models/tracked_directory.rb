@@ -24,10 +24,7 @@ class TrackedDirectory < ActiveRecord::Base
   end
 
   def track!
-    self.tracked_at = DateTime.now
-    Resque.enqueue(TrackDirectoryJob, path)
-    save!
-    self
+    TrackDirectoryJob.enqueue_directory(self)
   end
 
   private
