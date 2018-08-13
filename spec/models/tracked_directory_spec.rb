@@ -7,6 +7,10 @@ RSpec.describe TrackedDirectory do
     let(:path) { fixture_path }
     subject { described_class.create!(path: path) }
 
+    it "updates the inventory date/time" do
+      expect { subject.track! }.to change(subject, :tracked_at)
+    end
+
     describe "normal operation" do
       before { subject.track! }
 

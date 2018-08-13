@@ -18,7 +18,9 @@ class TrackDirectoryJob < ApplicationJob
   end
 
   def self.enqueue_directory(tracked_directory)
-    enqueue_path(tracked_directory.path)
+    if enqueue_path(tracked_directory.path)
+      tracked_directory.update!(tracked_at: DateTime.now)
+    end
   end
 
   def self.enqueue_path(path)
