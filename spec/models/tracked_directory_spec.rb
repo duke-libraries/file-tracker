@@ -27,13 +27,17 @@ RSpec.describe TrackedDirectory do
     describe "error handling" do
       let(:file) { File.join(subject.path, "nypl.jpg") }
 
-      describe "fatal error" do
+      describe "certain errors" do
         before do
           allow(File).to receive(:size) { 100 }
           allow(File).to receive(:size).with(file).and_raise(Errno::ENOENT)
         end
         it "rescues from the error" do
           expect { subject.track! }.not_to raise_error
+        end
+        it "logs the error" do
+          expect(Rails.logger).to receive(:error)
+          subject.track!
         end
       end
 

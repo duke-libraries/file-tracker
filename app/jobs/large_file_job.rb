@@ -15,11 +15,7 @@ module LargeFileJob
     end
 
     def queue_for_tracked_file(tracked_file)
-      if tracked_file.large?
-        large_file_queue
-      else
-        queue
-      end
+      tracked_file.large? ? large_file_queue : queue
     end
   end
 end
