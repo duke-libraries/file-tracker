@@ -82,7 +82,6 @@ end
 
 RailsAdmin.config do |config|
   config.navigation_static_links["Log"] = "/log"
-  config.navigation_static_links["Reports"] = "/reports"
 end
 
 require 'resque'
