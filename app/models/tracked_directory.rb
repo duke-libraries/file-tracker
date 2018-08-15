@@ -1,5 +1,3 @@
-require 'find'
-
 class TrackedDirectory < ActiveRecord::Base
 
   include TrackedDirectoryAdmin

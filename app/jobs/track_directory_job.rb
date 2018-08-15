@@ -1,18 +1,21 @@
-require 'find'
-
 class TrackDirectoryJob < ApplicationJob
 
   self.queue = :directory
 
   def self.perform(path)
-    Find.find(path) do |subpath|
-      if FileTest.symlink?(subpath) || path == subpath
-        next
-      elsif FileTest.directory?(subpath)
-        enqueue_path(subpath)
-        Find.prune
-      elsif FileTest.file?(subpath)
-        TrackFileJob.enqueue(subpath)
+    Dir.foreach(path) do |entry|
+      next if ['.', '..'].include?(entry)
+      abspath = File.join(path, entry)
+      begin
+        if FileTest.symlink?(abspath)
+          next
+        elsif FileTest.directory?(abspath)
+          enqueue_path(abspath)
+        elsif FileTest.file?(abspath)
+          TrackFileJob.enqueue(abspath)
+        end
+      rescue *(FileTracker.log_file_errors) => e
+        Rails.logger.error(e)
       end
     end
   end
