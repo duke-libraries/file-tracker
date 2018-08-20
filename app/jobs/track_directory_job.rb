@@ -18,6 +18,8 @@ class TrackDirectoryJob < ApplicationJob
         Rails.logger.error(e)
       end
     end
+  rescue *(FileTracker.log_file_errors) => e
+    Rails.logger.error(e)
   end
 
   def self.enqueue_directory(tracked_directory)
