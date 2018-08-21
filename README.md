@@ -21,9 +21,10 @@ MySQL database creation:
 
 ## Job queues
 
-    batch           Batch jobs 
+    batch           Batch jobs
     directory       Directory tracking
     file            File tracking
+    file_large      Large files
     fixity          Fixity checks
     fixity_large    Fixity checks on large files
 

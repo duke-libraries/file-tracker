@@ -1,0 +1,8 @@
+develop:
+  stage: deploy
+  script:
+    - /srv/perkins/bin/deploy-file-tracker.sh
+  only:
+    - gitlab-ci
+  tags:
+    - development
