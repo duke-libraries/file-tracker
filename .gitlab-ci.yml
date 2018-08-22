@@ -3,6 +3,6 @@ develop:
   script:
     - /srv/perkins/bin/deploy-file-tracker.sh
   only:
-    - gitlab-ci
+    - develop
   tags:
     - development
