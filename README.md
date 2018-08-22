@@ -49,6 +49,16 @@ Set variables in `config/application.yml`.  See the `figaro` gem documentation f
 
 See `config/locales/en.yml` for i18n keys.
 
+## Inventory
+
+The basic tracking process ("inventory") crawls the tracked directories, queueing up background jobs for each subdirectory and file.  Large files are handled in a separate queue for efficiency (generating digests for very large files can take a long time).
+
+To run the inventory process, execute the task
+
+    rake file_tracker:inventory[:id]
+
+The `[:id]` argument optionally specifies an individual directory to inventory, as opposed to all directories.
+
 ## Fixity checking
 
 To run a batch fixity check for files that are due to be (re-)checked, run:
