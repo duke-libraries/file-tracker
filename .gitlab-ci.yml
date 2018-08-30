@@ -3,6 +3,7 @@ test:
   variables:
     RAILS_ENV: test
   script:
+    - scl enable rh-ruby24 -- gem install bundler --no-doc
     - scl enable rh-ruby24 -- bundle install --deployment --without production
     - scl enable rh-ruby24 -- bundle exec rake db:setup
     - scl enable rh-ruby24 -- bundle exec rake
