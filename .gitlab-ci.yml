@@ -27,7 +27,7 @@ develop:
     - cd $RAILS_ROOT
     - pwd
     - scl enable $RH_RUBY_VERSION -- bundle install --deployment --binstubs --clean --without development test
-    - sudo -u $RAILS_USER -i rake $RAKE_TASKS
+    - sudo -u $RAILS_USER -i rake -f $RAILS_ROOT/Rakefile $RAKE_TASKS
     - sudo systemctl restart puma.service
     - sudo systemctl restart resque-pool.service
   only:
