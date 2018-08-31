@@ -3,15 +3,33 @@ test:
   variables:
     RAILS_ENV: test
   script:
+    - export
+    - whoami
+    - pwd
     - scl enable rh-ruby24 -- gem install bundler --no-doc
-    - scl enable rh-ruby24 -- bundle install --deployment --without production
+    - scl enable rh-ruby24 -- bundle install --deployment --binstubs --without production
     - scl enable rh-ruby24 -- bundle exec rake db:setup
     - scl enable rh-ruby24 -- bundle exec rake
 
 develop:
+  environment:
+    name: development
+    url: https://file-tracker-dev.lib.duke.edu/
   stage: deploy
+  variables:
+    RAILS_ENV: production
+    EXCLUDE_FILES: "/.bundle/ /.git/ /config/application.yml /config/resque-pool.yml /log/ /public/assets/ /tmp/"
+    RAKE_TASKS: "db:migrate db:seed assets:clean assets:precompile tmp:cache:clear"
   script:
-    - /srv/perkins/bin/deploy-file-tracker.sh
+    - export
+    - whoami
+    - pwd
+    - "rsync -rv --delete --exclude=/.bundle/ --exclude=/.git/ --exclude=/config/application.yml --exclude=/config/resque-pool.yml --exclude=/log/ --exclude=/public/assets/ --exclude=/tmp/ . $RAILS_ROOT"
+    - cd $RAILS_ROOT
+    - 'sudo -u $RAILS_USER scl enable rh-ruby24 -- bundle install --deployment --clean --binstubs --without development test'
+    - 'sudo -u $RAILS_USER scl enable rh-ruby24 -- rake $RAKE_TASKS'
+    - sudo systemctl reload httpd
+    - sudo systemctl restart file-tracker-queues
   only:
     - develop
   tags:
