@@ -18,8 +18,6 @@ develop:
   stage: deploy
   variables:
     RAILS_ENV: production
-    RAKE_TASKS: "db:migrate db:seed assets:clean assets:precompile tmp:cache:clear"
-    EXCLUDE_FILES: "/.bundle/ /.git/ /config/application.yml /log /tmp /public/assets/ /vendor/bundle/"
   script:
     - export
     - whoami
@@ -28,8 +26,8 @@ develop:
     - 'rsync -rv --delete ${EXCLUDE[@]/#/--exclude=} . $RAILS_ROOT'
     - cd $RAILS_ROOT
     - pwd
-    - 'scl enable $RH_RUBY_VERSION "RAILS_ENV=$RAILS_ENV bundle install --deployment --binstubs --clean --without development test"'
-    - 'sudo -u $RAILS_USER scl enable $RH_RUBY_VERSION "RAILS_ENV=$RAILS_ENV rake $RAKE_TASKS"'
+    - scl enable $RH_RUBY_VERSION -- bundle install --deployment --binstubs --clean --without development test
+    - sudo -u $RAILS_USER -i rake $RAKE_TASKS
     - sudo systemctl restart puma.service
     - sudo systemctl restart resque-pool.service
   only:
