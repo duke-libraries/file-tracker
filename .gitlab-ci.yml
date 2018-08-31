@@ -6,10 +6,10 @@ test:
     - export
     - whoami
     - pwd
-    - scl enable rh-ruby24 -- gem install bundler --no-doc
-    - scl enable rh-ruby24 -- bundle install --deployment --binstubs --without production
-    - scl enable rh-ruby24 -- bundle exec rake db:setup
-    - scl enable rh-ruby24 -- bundle exec rake
+    - scl enable $RH_RUBY_VERSION -- gem install bundler --no-doc
+    - scl enable $RH_RUBY_VERSION -- bundle install --deployment --binstubs --without production
+    - scl enable $RH_RUBY_VERSION -- bundle exec rake db:setup
+    - scl enable $RH_RUBY_VERSION -- bundle exec rake
 
 develop:
   environment:
@@ -18,18 +18,23 @@ develop:
   stage: deploy
   variables:
     RAILS_ENV: production
-    EXCLUDE_FILES: "/.bundle/ /.git/ /config/application.yml /config/resque-pool.yml /log/ /public/assets/ /tmp/"
     RAKE_TASKS: "db:migrate db:seed assets:clean assets:precompile tmp:cache:clear"
   script:
     - export
     - whoami
     - pwd
-    - "rsync -rv --delete --exclude=/.bundle/ --exclude=/.git/ --exclude=/config/application.yml --exclude=/config/resque-pool.yml --exclude=/log/ --exclude=/public/assets/ --exclude=/tmp/ . $RAILS_ROOT"
+    - 'if [ ! -d $RAILS_ROOT ]; then sudo -u $RAILS_USER mkdir -p -m 0775 $RAILS_ROOT; fi'
+    - 'rsync -rv --delete --exclude=/.bundle/ --exclude=/.git/ --exclude=/log --exclude=/tmp --exclude=/public/assets/ --exclude=/vendor/bundle/ . $RAILS_ROOT'
     - cd $RAILS_ROOT
-    - 'sudo -u $RAILS_USER scl enable rh-ruby24 -- bundle install --deployment --clean --binstubs --without development test'
-    - 'sudo -u $RAILS_USER scl enable rh-ruby24 -- rake $RAKE_TASKS'
-    - sudo systemctl reload httpd
-    - sudo systemctl restart file-tracker-queues
+    - pwd
+    - 'if [ ! -e "log" ]; then ln -s $PROJECT_ROOT/log log; fi'
+    - 'if [ ! -e "tmp" ]; then ln -s $PROJECT_ROOT/tmp tmp; fi'
+    - 'if [ ! -e "config/application.yml" ]; then ln -s $PROJECT_ROOT/etc/application.yml config/application.yml; fi'
+    - 'if [ ! -d "public/assets" ]; then mkdir -m 0775 public/assets; fi'
+    - 'scl enable $RH_RUBY_VERSION "RAILS_ENV=$RAILS_ENV bundle install --deployment --binstubs --clean --without development test"'
+    - 'sudo -u $RAILS_USER scl enable $RH_RUBY_VERSION "RAILS_ENV=$RAILS_ENV rake $RAKE_TASKS"'
+    - sudo systemctl restart puma
+    # - sudo systemctl restart file-tracker-queues
   only:
     - develop
   tags:
