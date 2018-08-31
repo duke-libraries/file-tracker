@@ -19,11 +19,13 @@ develop:
   variables:
     RAILS_ENV: production
     RAKE_TASKS: "db:migrate db:seed assets:clean assets:precompile tmp:cache:clear"
+    EXCLUDE_FILES: "/.bundle/ /.git/ /config/application.yml /log /tmp /public/assets/ /vendor/bundle/"
   script:
     - export
     - whoami
     - pwd
-    - 'rsync -rv --delete --exclude=/.bundle/ --exclude=/.git/ --exclude=/log --exclude=/tmp --exclude=/public/assets/ --exclude=/vendor/bundle/ . $RAILS_ROOT'
+    - EXCLUDE=($EXCLUDE_FILES)
+    - 'rsync -rv --delete ${EXCLUDE[@]/#/--exclude=} . $RAILS_ROOT'
     - cd $RAILS_ROOT
     - pwd
     - 'scl enable $RH_RUBY_VERSION "RAILS_ENV=$RAILS_ENV bundle install --deployment --binstubs --clean --without development test"'
