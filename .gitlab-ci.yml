@@ -22,7 +22,7 @@ develop:
     - pwd
     - scl enable $RH_RUBY_VERSION $PROJECT_ROOT/bin/deploy.sh
   after_script:
-    - sudo systemctl restart puma.service
+    - sudo systemctl reload httpd.service
     - sudo systemctl restart resque-pool.service
   only:
     - develop
