@@ -5,10 +5,7 @@ test:
   script:
     - whoami
     - pwd
-    - scl enable $RH_RUBY_VERSION -- gem install bundler --no-doc
-    - scl enable $RH_RUBY_VERSION -- bundle install --deployment --binstubs --without production
-    - scl enable $RH_RUBY_VERSION -- bundle exec rake db:setup
-    - scl enable $RH_RUBY_VERSION -- bundle exec rake
+    - scl enable $RH_RUBY_VERSION $PROJECT_ROOT/bin/test.sh
 
 develop:
   environment:
