@@ -22,13 +22,6 @@ Devise.setup do |config|
   config.omniauth :shibboleth,
                   request_type: :header,
                   uid_field: "eppn",
-                  name_field: "displayName",
-                  info_fields: {
-                    email: "mail",
-                    first_name: "givenName",
-                    last_name: "sn",
-                    nickname: "eduPersonNickname"
-                  }
-
+                  info_fields: { email: "mail" }
 
 end
