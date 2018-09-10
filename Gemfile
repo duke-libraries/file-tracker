@@ -5,7 +5,7 @@ git_source(:github) do |repo_name|
   "https://github.com/#{repo_name}.git"
 end
 
-gem 'sqlite3'
+gem 'puma', '~> 3.7'
 gem 'rails', '~> 5.1.6'
 gem 'jbuilder', '~> 2.5'
 gem 'figaro'
@@ -22,7 +22,7 @@ gem 'resque-pool'
 gem 'rails_admin', '~> 1.3.0'
 
 group :development, :test do
-  gem 'puma', '~> 3.7'
+  gem 'sqlite3'
   gem 'byebug'
   gem 'rspec-rails'
   gem 'rspec-its'
@@ -32,7 +32,6 @@ end
 group :production do
   gem 'mysql2'
   gem 'therubyracer', require: 'v8'
-  gem 'passenger'
 end
 
 group :development do
