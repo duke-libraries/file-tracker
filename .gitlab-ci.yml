@@ -1,26 +1,21 @@
 test:
   stage: test
-  variables:
-    RAILS_ENV: test
   script:
     - whoami
     - pwd
-    - scl enable $RH_RUBY_VERSION $PROJECT_ROOT/bin/test.sh
-
+    - export
+    - $PROJECT_ROOT/bin/test.sh
 develop:
   environment:
     name: development
     url: https://file-tracker-dev.lib.duke.edu/
   stage: deploy
-  variables:
-    RAILS_ENV: production
   script:
     - whoami
     - pwd
-    - scl enable $RH_RUBY_VERSION $PROJECT_ROOT/bin/deploy.sh
+    - $PROJECT_ROOT/bin/deploy.sh $CI_PROJECT_DIR
   after_script:
-    - sudo systemctl reload httpd.service
-    - sudo systemctl restart resque-pool.service
+    - $PROJECT_ROOT/bin/after_deploy.sh
   only:
     - develop
   tags:
