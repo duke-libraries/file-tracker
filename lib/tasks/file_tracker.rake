@@ -1,6 +1,12 @@
 require 'file_tracker'
 
 namespace :file_tracker do
+  namespace :failures do
+    desc "Retry all failed jobs"
+    task :requeue => :environment do
+      RequeueFailedJobs.call
+    end
+  end
 
   desc "Quickly track known files, optionally limited by directory ID."
   task :quick_track, [:id] => :environment do |t, args|

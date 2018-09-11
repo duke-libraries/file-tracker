@@ -37,4 +37,9 @@ module FileTracker
     [ Errno::EINVAL, Errno::ENOENT, Errno::EACCES ]
   end
 
+  mattr_accessor :retry_job_errors do
+    %w( Resque::DirtyExit
+        Errno::EADDRNOTAVAIL )
+  end
+
 end
