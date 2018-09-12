@@ -1,16 +1,13 @@
 class CheckFixityJob < ApplicationJob
-  include LargeFileJob
 
-  self.queue = :fixity
-  self.large_file_queue = :fixity_large
+  queue_as { tracked_file.large? ? :fixity_large : :fixity }
 
-  def self.perform(tracked_file_id)
-    tracked_file = TrackedFile.find(tracked_file_id)
+  def perform(tracked_file)
     tracked_file.check_fixity!
   end
 
-  def self.enqueue(tracked_file)
-    Resque.enqueue_to(queue_for_tracked_file(tracked_file), self, tracked_file.id)
+  def tracked_file
+    arguments.first
   end
 
 end
