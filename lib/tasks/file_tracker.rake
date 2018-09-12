@@ -1,23 +1,19 @@
 require 'file_tracker'
 
 namespace :file_tracker do
-  namespace :failures do
-    desc "Retry all failed jobs"
-    task :requeue => :environment do
-      RequeueFailedJobs.call
-    end
-  end
-
   desc "Quickly track known files, optionally limited by directory ID."
   task :quick_track, [:id] => :environment do |t, args|
-    Resque.enqueue(QuickTrackJob, args[:id])
+    QuickTrackJob.perform_later(args[:id])
     puts "Quick track job enqueued."
   end
 
   desc "Inventory all tracked directories, or single directory by ID."
   task :inventory, [:id] => :environment do |t, args|
-    Resque.enqueue(InventoryJob, args[:id])
-    puts "Inventory job enqueued."
+    if id = args[:id]
+      TrackedDirectory.find(id).track!
+    else
+      TrackedDirectory.find_each { |dir| dir.track! }
+    end
   end
 
   desc "Print application version."
@@ -57,62 +53,8 @@ EOS
 
   desc "Run the batch fixity check routine, optionally overriding the default limit (#{FileTracker.batch_fixity_check_limit})."
   task :fixity, [:max] => :environment do |t, args|
-    Resque.enqueue(BatchFixityCheckJob, args[:max])
+    BatchFixityCheckJob.perform_later(args[:max])
     puts "Batch fixity check job enqueued."
   end
 
-  namespace :queues do
-    desc "Print the status of the QueueManager."
-    task :status => :environment do
-      if QueueManager.running?
-        puts "QueueManager is running."
-      else
-        puts "QueueManager is stopped."
-      end
-    end
-
-    desc "Start the QueueManager."
-    task :start => :environment do
-      if QueueManager.start
-        while !QueueManager.running?
-          sleep 1
-        end
-        puts "QueueManager started."
-      else
-        puts "QueueManager already running."
-      end
-    end
-
-    desc "Stop the QueueManager."
-    task :stop => :environment do
-      if QueueManager.stop
-        while QueueManager.running?
-          sleep 1
-        end
-        puts "QueueManager stopped."
-      else
-        puts "QueueManager not running."
-      end
-    end
-
-    desc "Restart the QueueManager."
-    task :restart => [:stop, :start] do
-      # stop, start
-    end
-
-    desc "Reload the QueueManager configuration."
-    task :reload => :environment do
-      if QueueManager.reload
-        puts "QueueManager configuration reloaded."
-      else
-        puts "QueueManager not running."
-      end
-    end
-
-    desc "Kill QueueManager workers immediately and fail running jobs."
-    task :kill_workers => :environment do
-      count = QueueManager.kill_workers
-      puts "#{count} QueueManager workers killed."
-    end
-  end
 end

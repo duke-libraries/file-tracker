@@ -1,8 +1,14 @@
 class TrackDirectoryJob < ApplicationJob
 
-  self.queue = :directory
+  queue_as :directory
 
-  def self.perform(path)
+  FileTracker.log_file_errors.each do |exception|
+    discard_on(exception) do |job, e|
+      logger.error(e)
+    end
+  end
+
+  def perform(path)
     Dir.foreach(path) do |entry|
       next if ['.', '..'].include?(entry)
       abspath = File.join(path, entry)
@@ -10,26 +16,14 @@ class TrackDirectoryJob < ApplicationJob
         if FileTest.symlink?(abspath)
           next
         elsif FileTest.directory?(abspath)
-          enqueue_path(abspath)
+          TrackDirectoryJob.perform_later(abspath)
         elsif FileTest.file?(abspath)
-          TrackFileJob.enqueue(abspath)
+          TrackFileJob.perform_later(abspath)
         end
       rescue *(FileTracker.log_file_errors) => e
-        Rails.logger.error(e)
+        logger.error(e)
       end
     end
-  rescue *(FileTracker.log_file_errors) => e
-    Rails.logger.error(e)
-  end
-
-  def self.enqueue_directory(tracked_directory)
-    if enqueue_path(tracked_directory.path)
-      tracked_directory.update!(tracked_at: DateTime.now)
-    end
-  end
-
-  def self.enqueue_path(path)
-    Resque.enqueue(self, path)
   end
 
 end

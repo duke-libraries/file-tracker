@@ -22,7 +22,8 @@ class TrackedDirectory < ActiveRecord::Base
   end
 
   def track!
-    TrackDirectoryJob.enqueue_directory(self)
+    TrackDirectoryJob.perform_later(path)
+    update!(tracked_at: DateTime.now)
   end
 
   private
