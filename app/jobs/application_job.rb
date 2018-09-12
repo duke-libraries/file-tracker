@@ -1,14 +1,15 @@
-class ApplicationJob
+class ApplicationJob < ActiveJob::Base
 
-  class_attribute :queue
+  before_perform :clear_active_connections
 
-  def self.dequeue_all
-    Resque::Job.destroy(queue, self)
-  end
+  retry_on Errno::EADDRNOTAVAIL
+  retry_on Resque::DirtyExit if queue_adapter == :resque
+
+  private
 
   # See Resque README re: MySQL and Rails 4.x
   # (Rails 5 not mentioned as of 2017-10-20).
-  def self.before_perform_00_clear_active_connections(*args)
+  def clear_active_connections
     ActiveRecord::Base.clear_active_connections!
   end
 

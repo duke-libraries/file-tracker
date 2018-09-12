@@ -1,5 +1,3 @@
-require "resque_web"
-
 Rails.application.routes.draw do
 
   # Devise
@@ -9,6 +7,7 @@ Rails.application.routes.draw do
   mount RailsAdmin::Engine => '/admin', as: 'rails_admin'
 
   # Resque web
+  require "resque_web"
   mount ResqueWeb::Engine => "/queues"
 
   root to: "rails_admin/main#dashboard"

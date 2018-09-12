@@ -1,3 +1,5 @@
 class BatchJob < ApplicationJob
-  self.queue = :batch
+
+  queue_as :batch
+
 end

@@ -11,7 +11,7 @@ class BatchFixityCheck
   end
 
   def call
-    queued = tracked_files.each { |tf| CheckFixityJob.enqueue(tf) }
+    queued = tracked_files.each { |tf| CheckFixityJob.perform_later(tf) }
     queued.size
   end
 
