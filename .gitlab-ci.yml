@@ -5,6 +5,7 @@ test:
     - pwd
     - export
     - $PROJECT_ROOT/bin/test.sh
+
 develop:
   environment:
     name: development
@@ -20,3 +21,18 @@ develop:
     - develop
   tags:
     - development
+
+master:
+  environment:
+    name: production
+    url: https://file-tracker.lib.duke.edu/
+  stage: deploy
+  when: manual
+  script:
+    - $PROJECT_ROOT/bin/deploy.sh $CI_PROJECT_DIR
+  after_script:
+    - $PROJECT_ROOT/bin/after_deploy.sh
+  only:
+    - master
+  tags:
+    - production
