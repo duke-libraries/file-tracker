@@ -12,6 +12,7 @@ Devise.setup do |config|
 
   require 'omniauth-shibboleth'
   config.omniauth :shibboleth,
+                  request_type: :header,
                   uid_field: "eppn",
                   info_fields: { email: "mail" }
 
