@@ -3,6 +3,7 @@ class ApplicationJob < ActiveJob::Base
   before_perform :clear_active_connections
 
   retry_on Errno::EADDRNOTAVAIL
+  retry_on Errno::EBUSY
   retry_on Resque::DirtyExit if queue_adapter == :resque
 
   private
