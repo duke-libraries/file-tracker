@@ -1,5 +1,7 @@
 class TrackFileJob < ApplicationJob
 
+  discard_on ActiveJob::DeserializationError
+
   queue_as { large_file? ? :file_large : :file }
 
   def perform(path)
