@@ -22,8 +22,12 @@ class TrackedDirectory < ActiveRecord::Base
   end
 
   def track!
-    TrackDirectoryJob.perform_later(path)
+    job_class.perform_later(path)
     update!(tracked_at: DateTime.now)
+  end
+
+  def job_class
+    @job_class ||= FileTracker.track_directory_job.constantize
   end
 
   private
