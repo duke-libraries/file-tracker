@@ -37,4 +37,8 @@ module FileTracker
     [ Errno::EINVAL, Errno::ENOENT, Errno::EACCES ]
   end
 
+  mattr_accessor :track_directory_job do
+    "TrackDirectoryFindJob"
+  end
+
 end
