@@ -4,6 +4,7 @@ class ApplicationJob < ActiveJob::Base
 
   retry_on Errno::EADDRNOTAVAIL
   retry_on Errno::EBUSY
+  retry_on Errno::EBADF
   retry_on Resque::DirtyExit if queue_adapter == :resque
 
   private
