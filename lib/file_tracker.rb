@@ -41,4 +41,10 @@ module FileTracker
     "TrackDirectoryFindJob"
   end
 
+  def self.config
+    @config ||= class_variables(false).each_with_object({}) do |var, memo|
+      memo[var.to_s.sub("@@", "").to_sym] = class_variable_get(var)
+    end.slice(:batch_fixity_check_limit, :check_last_seen_period, :fixity_check_period, :large_file_threshhold)
+  end
+
 end
