@@ -2,10 +2,12 @@ module Api::V1
   class Status
     include ActiveModel::Model
 
+    RESQUE_INFO_KEYS = %i(pending processed workers working failed)
+
     Meta = Struct.new(:version, :config)
     Data = Struct.new(:queues, :directories, :files)
-    Queues = Struct.new(:info, :queues)
-    FileInfo = Struct.new(:total, :size, :large)
+    Queues = Struct.new(:info, :queue_sizes)
+    FileInfo = Struct.new(:count, :total_size, :large_files)
 
     attr_reader :meta, :data
 
@@ -15,7 +17,7 @@ module Api::V1
     end
 
     def queues
-      Queues.new(Resque.info.slice(:pending, :processed, :workers, :working, :failed),
+      Queues.new(Resque.info.slice(*RESQUE_INFO_KEYS),
                  Resque.queue_sizes)
     end
 
@@ -24,9 +26,8 @@ module Api::V1
     end
 
     def file_info
-      size = TrackedFile.sum(:size)
       FileInfo.new(TrackedFile.count,
-                   ActiveSupport::NumberHelper.number_to_human_size(size),
+                   TrackedFile.sum(:size),
                    TrackedFile.large.count)
     end
 
