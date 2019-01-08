@@ -1,6 +1,13 @@
 require 'file_tracker'
 
 namespace :file_tracker do
+
+  desc "Run cleanup process"
+  task :cleanup => :environment do
+    failures = Resque::Failure.clear
+    puts "Failures cleared: #{failures}"
+  end
+
   desc "Quickly track known files, optionally limited by directory ID."
   task :quick_track, [:id] => :environment do |t, args|
     QuickTrackJob.perform_later(args[:id])
