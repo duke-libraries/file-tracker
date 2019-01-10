@@ -4,8 +4,9 @@ namespace :file_tracker do
 
   desc "Run cleanup process"
   task :cleanup => :environment do
-    failures = Resque::Failure.clear
-    puts "Failures cleared: #{failures}"
+    puts "Running cleanup ..."
+    Resque::Failure.clear
+    puts "Failures cleared."
   end
 
   desc "Quickly track known files, optionally limited by directory ID."
