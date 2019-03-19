@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 module Api::V1
-  RSpec.describe StatusController do
+  RSpec.describe StatusController, status: true do
 
     describe "index" do
       subject { get :index, format: 'json' }
