@@ -81,7 +81,8 @@ Rails.application.configure do
 end
 
 RailsAdmin.config do |config|
-  config.navigation_static_links["Log"] = "/log"
+  config.navigation_static_links["Log"]  = "/log"
+  config.navigation_static_links["Sync"] = "/sync"
 end
 
 require 'resque'
