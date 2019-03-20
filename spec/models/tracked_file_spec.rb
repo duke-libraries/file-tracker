@@ -211,7 +211,8 @@ RSpec.describe TrackedFile do
       subject { described_class.create!(path: path, size: size, sha1: sha1) }
       describe "when the file size has not changed" do
         it "touches the record" do
-          expect { subject.track! }.to change(subject, :updated_at)
+          expect(subject).to receive(:touch)
+          subject.track!
         end
       end
       describe "when the file size has changed" do
