@@ -19,6 +19,7 @@ gem 'resque-pool', '~> 0.7.0'
 gem 'rails_admin', '~> 1.3'
 gem 'mysql2'
 gem 'mini_racer'
+gem 'listen', group: :development
 
 group :development, :test do
   gem 'byebug'
