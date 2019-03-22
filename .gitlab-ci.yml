@@ -1,19 +1,28 @@
-test:
+stages:
+  - build
+  - test
+  - deploy
+
+build_job:
+  stage: build
+  script:
+    - $PROJECT_ROOT/bin/build.sh
+  artifacts:
+    paths:
+      - .bundle/
+      - vendor/bundle/
+
+test_job:
   stage: test
   script:
-    - whoami
-    - pwd
-    - export
     - $PROJECT_ROOT/bin/test.sh
 
-develop:
+deploy_dev:
   environment:
     name: development
     url: https://file-tracker-dev.lib.duke.edu/
   stage: deploy
   script:
-    - whoami
-    - pwd
     - $PROJECT_ROOT/bin/deploy.sh $CI_PROJECT_DIR
   after_script:
     - $PROJECT_ROOT/bin/after_deploy.sh
@@ -22,7 +31,7 @@ develop:
   tags:
     - development
 
-master:
+deploy_prod:
   environment:
     name: production
     url: https://file-tracker.lib.duke.edu/
