@@ -3,10 +3,18 @@ stages:
   - test
   - deploy
 
+variables:
+  BUNDLE_DEPLOYMENT: "true"
+  BUNDLE_ERROR_ON_STDERR: "true"
+  BUNDLE_FROZEN: "true"
+  BUNDLE_IGNORE_CONFIG: "true"
+  BUNDLE_PATH: "vendor/bundle"
+  BUNDLE_WITHOUT: "development"
+
 build_job:
   stage: build
   script:
-    - $PROJECT_ROOT/bin/build.sh
+    - $BUNDLE_COMMAND install
   artifacts:
     paths:
       - .bundle/
@@ -14,18 +22,25 @@ build_job:
 
 test_job:
   stage: test
+  variables:
+    RAILS_ENV: test
+    DATABASE_URL: "${RAILS_TEST_DB_URL}"
+  before_script:
+    - $BUNDLE_COMMAND exec bin/rake db:reset
   script:
-    - $PROJECT_ROOT/bin/test.sh
+    - $BUNDLE_COMMAND exec bin/rake spec
 
 deploy_dev:
   environment:
     name: development
     url: https://file-tracker-dev.lib.duke.edu/
   stage: deploy
-  script:
-    - $PROJECT_ROOT/bin/deploy.sh $CI_PROJECT_DIR
-  after_script:
-    - $PROJECT_ROOT/bin/after_deploy.sh
+  script: &deploy_script
+    - rsync -r --delete --exclude-from=EXCLUDE ./ $RAILS_ROOT/
+    - '$RAKE_WRAPPER db:setup 2>/dev/null || $RAKE_WRAPPER db:migrate'
+    - $RAKE_WRAPPER assets:precompile assets:clean tmp:cache:clear
+  after_script: &after_deploy
+    - sudo /usr/bin/systemctl restart $RAILS_SERVICE_UNIT
   only:
     - develop
   tags:
@@ -37,10 +52,8 @@ deploy_prod:
     url: https://file-tracker.lib.duke.edu/
   stage: deploy
   when: manual
-  script:
-    - $PROJECT_ROOT/bin/deploy.sh $CI_PROJECT_DIR
-  after_script:
-    - $PROJECT_ROOT/bin/after_deploy.sh
+  script: *deploy_script
+  after_script: *after_deploy
   only:
     - master
   tags:
