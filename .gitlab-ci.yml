@@ -17,7 +17,6 @@ build_job:
     - $BUNDLE_COMMAND install
   artifacts:
     paths:
-      - .bundle/
       - vendor/bundle/
 
 test_job:
