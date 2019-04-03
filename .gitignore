@@ -20,6 +20,9 @@
 # Ignore application configuration
 /config/application.yml
 
+# Database config
+/config/database.yml
+
 # Resque
 /config/resque-pool.yml
 
